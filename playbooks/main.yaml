@@ -1,0 +1,43 @@
+---
+
+- hosts: all
+  roles:
+    - cri.bootstrap
+  tags:
+    - bootstrap
+
+- hosts: all
+  gather_facts: true
+  tags:
+    - "always"
+    - "gather_facts"
+
+- hosts: all
+  roles:
+    - role: cri.common
+      tags:
+        - common
+    - role: cri.network
+      tags:
+        - network
+    - role: cri.netdata
+      tags:
+        - netdata
+    - role: cloudalchemy.node_exporter
+      tags:
+        - node-exporter
+    - role: cri.promtail
+      tags:
+        - promtail
+  vars_files:
+    - ../vars/ssh_keys.yml
+
+- hosts: undercloud
+  roles:
+    - ansible-community.ansible-vault
+  tags: vault
+
+- hosts: vpn
+  roles:
+    - consensus.wireguard_cloud_gateway
+  tags: vpn

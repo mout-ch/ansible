@@ -1,0 +1,100 @@
+# yamllint disable rule:line-length
+---
+
+collections:
+  - name: community.general
+    version: 1.3.6
+  - name: https://gitlab.cri.epita.fr/cri/iac/ansible/collections/acme/-/package_files/3829/download
+
+  - name: git+https://github.com/ansible-collections/community.hashi_vault
+    version: 7e148990c2f335721f6f0df180076e9ff287eed5
+
+  - name: git+https://github.com/flowerysong/ansible-flowerysong.hvault
+    version: 316e3da364da43329cd8e8c5e470fd65c6dd07ff
+
+roles:
+  - name: cri.bootstrap
+    src: git+https://gitlab.cri.epita.fr/cri/iac/ansible/roles/bootstrap.git
+    version: 0.1.0
+  - name: cri.ceph_tools
+    src: git+https://gitlab.cri.epita.fr/cri/iac/ansible/roles/ceph_tools.git
+    version: 0.2.0
+  - name: cri.common
+    src: git+https://gitlab.cri.epita.fr/cri/iac/ansible/roles/common.git
+    version: 0.1.0
+  - name: cri.docker
+    src: git+https://gitlab.cri.epita.fr/cri/iac/ansible/roles/docker.git
+    version: 0.2.0
+  - name: cri.gitlab_runner
+    src: git+https://gitlab.cri.epita.fr/cri/iac/ansible/roles/gitlab_runner.git
+    version: 0.1.1
+  - name: cri.maas_worker
+    src: git+https://gitlab.cri.epita.fr/cri/iac/ansible/roles/maas_worker.git
+    version: 0.1.2
+  - name: cri.minio_docker
+    src: git+https://gitlab.cri.epita.fr/cri/iac/ansible/roles/minio_docker.git
+    version: 0.1.0
+  - name: cri.netdata
+    src: git+https://gitlab.cri.epita.fr/cri/iac/ansible/roles/netdata.git
+    version: 0.1.1
+  - name: cri.network
+    src: git+https://gitlab.cri.epita.fr/cri/iac/ansible/roles/network.git
+    version: 0.1.0
+  - name: cri.nftables
+    src: git+https://gitlab.cri.epita.fr/cri/iac/ansible/roles/nftables.git
+    version: 0.1.0
+  - name: cri.promtail
+    src: git+https://gitlab.cri.epita.fr/cri/iac/ansible/roles/promtail.git
+    version: 0.1.1
+  - name: cri.restic
+    src: git+https://gitlab.cri.epita.fr/cri/iac/ansible/roles/restic.git
+    version: 1.4.1
+  - name: cri.warsow
+    src: git+https://gitlab.cri.epita.fr/cri/iac/ansible/roles/warsow.git
+    version: 0.1.1
+
+    # See https://github.com/bertvv/ansible-role-bind/pull/166
+  - name: bertvv.bind
+    src: git+https://github.com/rissson/ansible-role-bind.git
+    version: 40e042189a94759b9780376ff4abfac057cd7016
+  - name: bertvv.dhcp
+    src: git+https://github.com/bertvv/ansible-role-dhcp.git
+    version: ce587ed69afb28d945d5857556ab1661c1bfbe9a
+  - name: ckaserer.tftp
+    version: 2.1.3
+  - name: cloudalchemy.node_exporter
+    version: 2.0.0
+  - name: cloudalchemy.pushgateway
+    version: 0.2.4
+  - name: evrardjp.keepalived
+    version: 5.1.0
+  - name: geerlingguy.nfs
+    version: 2.0.0
+  - name: mrlesmithjr.chrony
+    src: https://github.com/mrlesmithjr/ansible-chrony.git
+    version: v0.1.3
+  - name: mrlesmithjr.drbd
+    src: git+https://github.com/mrlesmithjr/ansible-drbd.git
+    version: 2876fa5e70ffe57007125c01baf4848978eba29c
+  - name: mrlesmithjr.squid
+    version: v0.1.0
+  - name: ome.haproxy
+    version: 3.2.3
+  - name: stackhpc.libvirt-host
+    version: v1.8.3
+  - name: stackhpc.libvirt-vm
+    version: v1.14.2
+  - name: timorunge.sssd
+    version: 0.5.5
+  - name: xanmanning.k3s
+    version: v2.11.1
+
+  - src: https://github.com/ansible-community/ansible-vault.git
+    name: ansible-community.ansible-vault
+    scm: git
+    version: dddc74c0fc447205664424438d72d6e2f9397f2d
+
+  - src: https://gitlab.com/consensus.enterprises/ansible-roles/ansible-role-wireguard-cloud-gateway.git
+    name: consensus.wireguard_cloud_gateway
+    scm: git
+    version: 3ee1e52456f93367857cf2583d7bbe1b015b3f1f

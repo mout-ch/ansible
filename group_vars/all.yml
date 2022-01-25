@@ -1,0 +1,23 @@
+---
+
+unattended_upgrades_origins:
+  - "packagecloud.io/netdata/netdata:${distro_codename}"
+
+root_password_hashed: $6$PT9sMj9pMhJQI$Q8ZC2stxtIeFSCN6Fh3H/j5ygTScpgBjDaqy/UdHe1ohi4k232MYGXJAUBapH6KV.xpesB3WiQGXUMbxYFEdx.
+
+bpf_tools_install: true
+
+mail_server: mail.mout.ch
+
+ssh_authorized_keys:
+  - "{{ ssh_key_rootmout }}"
+
+
+loki_username: "none"  # yamllint disable-line rule:line-length
+loki_password: "none"  # yamllint disable-line rule:line-length
+
+promtail_url: "none"
+
+vault_raft_group_name: "undercloud"
+
+alter_security_groups: false
