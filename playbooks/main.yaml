@@ -48,3 +48,8 @@
   roles:
     - role: mrlesmithjr.netplan
       become: yes
+
+- hosts: ceph
+  tags: docker
+  roles:
+    - cri.docker
