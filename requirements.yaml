@@ -98,3 +98,7 @@ roles:
     name: consensus.wireguard_cloud_gateway
     scm: git
     version: 3ee1e52456f93367857cf2583d7bbe1b015b3f1f
+
+  - src: git+https://github.com/mrlesmithjr/ansible-netplan
+    name: mrlesmithjr.netplan
+    version: e3f748337a01452d8114abbcf17c913b7de8ac7e

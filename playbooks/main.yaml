@@ -41,3 +41,10 @@
   roles:
     - consensus.wireguard_cloud_gateway
   tags: vpn
+
+- hosts: all
+  any_errors_fatal: true
+  tags: netplan
+  roles:
+    - role: mrlesmithjr.netplan
+      become: yes
