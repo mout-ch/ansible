@@ -53,3 +53,8 @@
   tags: docker
   roles:
     - cri.docker
+
+- hosts: ceph
+  tags: cephadm
+  roles:
+    - cri.ceph_tools
