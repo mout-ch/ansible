@@ -102,3 +102,7 @@ roles:
   - src: git+https://github.com/mrlesmithjr/ansible-netplan
     name: mrlesmithjr.netplan
     version: e3f748337a01452d8114abbcf17c913b7de8ac7e
+
+  - src: git+https://github.com/PyratLabs/ansible-role-k3s
+    name: k3s
+    version: 3be9eff9677d2d60fced13c468cd8c43de59fdf2

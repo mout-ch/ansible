@@ -9,3 +9,12 @@ client_accessible_ips: "192.168.10.0/24"
 # Server configuration.
 server_public_ip: under-1.infra.mout.ch
 server_public_key: "{{ lookup('community.general.hashi_vault', 'mout.ch/data/vpn/under-1.infra.mout.ch')['public_key'] }}"
+
+netplan_enabled: true
+netplan_configuration:
+  network:
+    version: 2
+    ethernets:
+      eth0:
+        addresses:
+          - 192.168.11.1/24

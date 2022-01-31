@@ -14,6 +14,11 @@
 
 - hosts: all
   roles:
+    - role: common
+  tags: common
+
+- hosts: all
+  roles:
     - role: cri.common
       tags:
         - common
@@ -36,6 +41,16 @@
   roles:
     - ansible-community.ansible-vault
   tags: vault
+
+- hosts: gate
+  tags: ip_forward
+  tasks:
+    - ansible.posix.sysctl:
+        name: net.ipv4.ip_forward
+        value: '1'
+        sysctl_set: yes
+        state: present
+        reload: yes
 
 - hosts: vpn
   roles:
