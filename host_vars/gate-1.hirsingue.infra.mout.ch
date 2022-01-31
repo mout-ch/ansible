@@ -18,3 +18,5 @@ netplan_configuration:
       eth0:
         addresses:
           - 192.168.11.1/24
+        nameservers:
+          addresses: [8.8.8.8, 8.8.4.4]

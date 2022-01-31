@@ -15,7 +15,8 @@
 - hosts: all
   roles:
     - role: common
-  tags: common
+  tags:
+    - common
 
 - hosts: all
   roles:
