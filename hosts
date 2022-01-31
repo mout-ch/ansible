@@ -10,3 +10,6 @@ ceph-[1:3].hirsingue.infra.mout.ch
 
 [undercloud]
 under-1.infra.mout.ch
+
+[compute]
+compute-1.hirsingue.infra.mout.ch

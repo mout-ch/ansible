@@ -14,3 +14,4 @@
     state: present
     name:
       - ntp
+      - iptables-persistent
