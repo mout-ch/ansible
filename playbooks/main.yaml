@@ -101,3 +101,11 @@
       community.general.iptables_state:
         state: saved
         path: /etc/iptables/rules.v4
+
+
+- hosts: compute-1.hirsingue.infra.mout.ch
+  tags: k3s
+  vars:
+    k3s_release_version: latest
+  roles:
+     - role: xanmanning.k3s
