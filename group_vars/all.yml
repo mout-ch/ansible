@@ -18,14 +18,19 @@ loki_password: "none"  # yamllint disable-line rule:line-length
 
 promtail_url: "none"
 
-vault_raft_group_name: "undercloud"
-
 alter_security_groups: false
 
 #ansible_ssh_common_args: '-o ProxyCommand="ssh -W %h:%p -q root@gate-1.hirsingue.infra.mout.ch"'
 
+### Ceph
 ceph_release: pacific
 
+### Consul
 consul_install_dependencies: false
+consul_group_name: consul
 
-consul_group_name: consul_server
+### Vault
+#vault_iface: lo
+vault_tls_disable: true
+vault_backend: consul
+vault_listener_localhost_enable: true

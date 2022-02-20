@@ -38,7 +38,7 @@
   vars_files:
     - ../vars/ssh_keys.yml
 
-- hosts: undercloud
+- hosts: vault
   roles:
     - ansible-community.ansible-vault
   tags: vault
@@ -110,7 +110,7 @@
   roles:
      - role: xanmanning.k3s
 
-- hosts: consul_server
+- hosts: consul
   tags: consul
   roles:
     - ansible-consul

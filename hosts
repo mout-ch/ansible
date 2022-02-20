@@ -16,3 +16,13 @@ compute-1.hirsingue.infra.mout.ch
 
 [consul_server:children]
 ceph
+
+[consul_agent:children]
+compute
+
+[consul:children]
+consul_server
+consul_agent
+
+[vault:children]
+ceph
