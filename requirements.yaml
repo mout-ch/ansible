@@ -102,3 +102,7 @@ roles:
   - src: git+https://github.com/mrlesmithjr/ansible-netplan
     name: mrlesmithjr.netplan
     version: e3f748337a01452d8114abbcf17c913b7de8ac7e
+
+  - src: git+https://github.com/ansible-community/ansible-consul.git
+    name: ansible-consul
+    version: 33b0f4d44e39717bf8cf65d83fb0411e0f7f0892

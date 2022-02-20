@@ -109,3 +109,8 @@
     k3s_release_version: latest
   roles:
      - role: xanmanning.k3s
+
+- hosts: consul_server
+  tags: consul
+  roles:
+    - ansible-consul

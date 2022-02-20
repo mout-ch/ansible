@@ -13,3 +13,6 @@ under-1.infra.mout.ch
 
 [compute]
 compute-1.hirsingue.infra.mout.ch
+
+[consul_server:children]
+ceph
