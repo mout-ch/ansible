@@ -5,14 +5,17 @@ consul_bootstrap_expect: true
 
 consul_config_custom:
   connect:
-    ca_provider: "vault"
-    ca_config:
-      address: active.vault.service.consul
-      token: 
-      root_pki_path: "connect_root"
-      intermediate_pki_path: "connect_inter"
-      leaf_cert_ttl: "72h"
-      rotation_period: "2160h"
-      intermediate_cert_ttl: "8760h"
-      private_key_type: "rsa"
-      private_key_bits: 2048
+    ca_provider: "consul"
+
+    ## TOFIX
+
+    # ca_config:
+    #   address: active.vault.service.consul
+    #   token:
+    #   root_pki_path: "connect_root"
+    #   intermediate_pki_path: "connect_inter"
+    #   leaf_cert_ttl: "72h"
+    #   rotation_period: "2160h"
+    #   intermediate_cert_ttl: "8760h"
+    #   private_key_type: "rsa"
+    #   private_key_bits: 2048
