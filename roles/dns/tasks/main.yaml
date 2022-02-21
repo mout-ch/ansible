@@ -1,0 +1,40 @@
+---
+
+- name: Ensures resolved folder existance
+  file:
+    path: /etc/systemd/resolved.conf.d
+    state: directory
+    recurse: true
+
+- name: Add consul file in resolved directory
+  copy:
+    src: consul.conf
+    dest: /etc/systemd/resolved.conf.d/consul.conf
+  notify: restart_resolved
+
+- name: Apply iptables port translation to match port 53 (udp)
+  iptables:
+    table: nat
+    chain: OUTPUT
+    destination: localhost
+    protocol: udp
+    match: udp
+    destination_port: 53
+    to_ports: 8600
+    jump: REDIRECT
+
+- name: Apply iptables port translation to match port 53 (tcp)
+  iptables:
+    table: nat
+    chain: OUTPUT
+    destination: localhost
+    protocol: tcp
+    match: tcp
+    destination_port: 53
+    to_ports: 8600
+    jump: REDIRECT
+
+- name: Save current state of the firewall in system file
+  community.general.iptables_state:
+    state: saved
+    path: /etc/iptables/rules.v4

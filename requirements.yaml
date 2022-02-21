@@ -106,3 +106,7 @@ roles:
   - src: git+https://github.com/ansible-community/ansible-consul.git
     name: ansible-consul
     version: 33b0f4d44e39717bf8cf65d83fb0411e0f7f0892
+
+  - src: git+https://github.com/Oefenweb/ansible-dnsmasq.git
+    name: oefenweb.dnsmasq
+    version: 79ddf4503a6e27e7fdcc1017477c7bb3c868a0d6

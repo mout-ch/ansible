@@ -1,4 +1,8 @@
 ---
 consul_datacenter: dc1
 consul_node_role: server
-consul_bootstrap_expect: true
+consul_bootstrap_expect: false
+
+#consul_config_custom:
+#  address: active.vault.service.consul
+#  token:

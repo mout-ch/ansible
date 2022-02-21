@@ -1,0 +1,6 @@
+# handlers file
+---
+- name: restart_resolved
+  service:
+    name: systemd-resolved
+    state: restarted
