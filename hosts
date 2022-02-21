@@ -17,7 +17,7 @@ compute-1.hirsingue.infra.mout.ch
 [consul_server:children]
 ceph
 
-[consul_agent:children]
+[consul_client:children]
 compute
 
 [consul:children]
