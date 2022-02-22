@@ -22,7 +22,7 @@ compute
 
 [consul:children]
 consul_server
-consul_agent
+consul_client
 
 [vault:children]
 ceph

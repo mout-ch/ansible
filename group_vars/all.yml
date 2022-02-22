@@ -29,6 +29,7 @@ ceph_release: pacific
 consul_install_dependencies: false
 consul_group_name: consul
 consul_connect_enabled: true
+consul_version: 1.11.2
 
 ### Vault
 #vault_iface: lo
