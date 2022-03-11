@@ -38,6 +38,16 @@
   vars_files:
     - ../vars/ssh_keys.yml
 
+- hosts: consul
+  tags: consul
+  roles:
+    - ansible-consul
+
+- hosts: consul
+  tags: dns
+  roles:
+    - dns
+
 - hosts: vault
   roles:
     - ansible-community.ansible-vault
@@ -115,13 +125,3 @@
     k3s_release_version: latest
   roles:
      - role: xanmanning.k3s
-
-- hosts: consul
-  tags: consul
-  roles:
-    - ansible-consul
-
-- hosts: consul
-  tags: dns
-  roles:
-    - dns
