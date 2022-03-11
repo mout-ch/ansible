@@ -18,7 +18,7 @@ roles:
     version: 0.1.0
   - name: cri.ceph_tools
     src: git+https://gitlab.cri.epita.fr/cri/iac/ansible/roles/ceph_tools.git
-    version: 0.2.0
+    version: 66e89d0a6e84ecd5e70208c26ce27c868395e4ef
   - name: cri.common
     src: git+https://gitlab.cri.epita.fr/cri/iac/ansible/roles/common.git
     version: 0.1.0
