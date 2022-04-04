@@ -26,17 +26,13 @@
     - role: cri.network
       tags:
         - network
-    #- role: cri.netdata
-    #  tags:
-    #    - netdata
-    - role: cloudalchemy.node_exporter
-      tags:
-        - node-exporter
-    - role: cri.promtail
-      tags:
-        - promtail
   vars_files:
     - ../vars/ssh_keys.yml
+
+- hosts: all:!ceph
+  tags: node-exporter
+  roles:
+    - cloudalchemy.node_exporter
 
 - hosts: consul
   tags: consul
