@@ -16,7 +16,7 @@ consul_ports:
   server: 8300
 
 consul_tls_enable: true
-consul_tls_ca_crt: "certs/consul-agent-ca.pem"
+consul_tls_ca_crt: "{{ lookup('community.hashi_vault.hashi_vault', 'secret=mout.ch/data/consul/certs/root:cert') }}"
 consul_tls_verify_server_hostname: true
 consul_tls_verify_incoming: true
 consul_tls_verify_outgoing: true
