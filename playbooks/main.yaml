@@ -81,32 +81,7 @@
   roles:
     - cri.ceph_tools
 
-- hosts: gate-1.hirsingue.infra.mout.ch
-  tags: iptables
-  tasks:
-    - name: nat traffic from 192.168.11.0/24 that doesnt reach vpn
-      iptables:
-        table: nat
-        chain: POSTROUTING
-        destination: "!192.168.10.0/24"
-        jump: MASQUERADE
-
-    - name: enable 192.168.11.0/24 to internet traffic
-      iptables:
-        chain: FORWARD
-        source: 192.168.11.0/24
-        jump: ACCEPT
-
-    - name: enable internet 192.168.11.0/24 traffic
-      iptables:
-        chain: FORWARD
-        destination: 192.168.11.0/24
-        jump: ACCEPT
-
-    - name: Save current state of the firewall in system file
-      community.general.iptables_state:
-        state: saved
-        path: /etc/iptables/rules.v4
+- import_playbook: iptables.yaml
 
 - hosts: compute-1.hirsingue.infra.mout.ch
   tags: k3s
