@@ -96,3 +96,8 @@
     k3s_release_version: latest
   roles:
      - role: xanmanning.k3s
+
+- hosts: gate-1.blotzheim.infra.mout.ch
+  tags: ddns
+  roles:
+    - role: maxhoesel.ddclient

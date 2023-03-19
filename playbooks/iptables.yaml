@@ -21,6 +21,46 @@
         destination: 192.168.11.0/24
         jump: ACCEPT
 
+    - name: port-forward http
+      iptables:
+        table: nat
+        chain: PREROUTING
+        destination: 192.168.1.100/24
+        destination_port: 80
+        protocol: tcp
+        jump: DNAT
+        to_destination: 192.168.11.20:80
+
+    - name: port-forward https
+      iptables:
+        table: nat
+        chain: PREROUTING
+        destination: 192.168.1.100/24
+        destination_port: 443
+        protocol: tcp
+        jump: DNAT
+        to_destination: 192.168.11.20:443
+
+    - name: port-forward minecraft
+      iptables:
+        table: nat
+        chain: PREROUTING
+        destination: 192.168.1.100/24
+        destination_port: 25565
+        protocol: tcp
+        jump: DNAT
+        to_destination: 192.168.11.20:30573
+
+    - name: port-forward minecraft-2
+      iptables:
+        table: nat
+        chain: PREROUTING
+        destination: 192.168.1.100/24
+        destination_port: 25566
+        protocol: tcp
+        jump: DNAT
+        to_destination: 192.168.11.20:30574
+
     - name: Save current state of the firewall in system file
       community.general.iptables_state:
         state: saved
