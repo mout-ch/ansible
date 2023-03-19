@@ -1,5 +1,5 @@
 ---
-- hosts: gate-1.hirsingue.infra.mout.ch
+- hosts: gate-1.blotzheim.infra.mout.ch
   tags: iptables
   tasks:
     - name: nat traffic from 192.168.11.0/24 that doesnt reach vpn
