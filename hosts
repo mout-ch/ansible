@@ -3,7 +3,7 @@ gate
 undercloud
 
 [gate]
-gate-1.blotzheim.infra.mout.ch ansible_host=90.11.246.164 ansible_user=root
+gate-1.blotzheim.infra.mout.ch
 gate-1.hirsingue.infra.mout.ch
 
 [ceph]
