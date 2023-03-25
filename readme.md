@@ -6,3 +6,6 @@ VPN between undercloud and other nodes
 
 4 Servers
 3 ceph and 1 compute
+
+todo:
+switch to nftables
