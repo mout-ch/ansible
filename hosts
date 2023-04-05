@@ -10,10 +10,13 @@ gate-1.hirsingue.infra.mout.ch
 ceph-[1:3].hirsingue.infra.mout.ch
 
 [undercloud]
-under-1.infra.mout.ch ansible_user=root
+under-1.infra.mout.ch
 
 [compute]
 compute-1.hirsingue.infra.mout.ch
+
+[hypervisor]
+hv-1.blotzheim.infra.mout.ch
 
 [consul_server:children]
 ceph
