@@ -115,3 +115,7 @@ roles:
   - src: git+https://github.com/mrlesmithjr/ansible-manage-lvm.git
     name: mrlesmithjr.lvm
     version: ea2e60f04388147ca2cf3c87895032b1faf40677
+
+  - src: git+https://github.com/mrlesmithjr/ansible-mdadm
+    name: mrlesmithjr.mdadm
+    version: a0ee021fa2c2d3e9f47b77f909b6210db52dad92
