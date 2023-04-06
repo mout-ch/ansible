@@ -9,7 +9,9 @@ netplan_configuration:
           - 192.168.11.30/24
         gateway4: 192.168.11.1
 
-### Storage
+# Storage
+
+## LVM
 
 manage_lvm: true
 lvm_groups:
@@ -81,7 +83,20 @@ lvm_groups:
         size: 50G
         create: true
 
-  # disk 1
-  #     - /dev/disk/by-id/scsi-SSEAGATE_ST300MM0006_S0K09N82
-  # disk 4
-  #     - /dev/disk/by-id/scsi-SSEAGATE_ST300MM0006_S0K06VZ0
+# disk 1
+#     - /dev/disk/by-id/scsi-SSEAGATE_ST300MM0006_S0K09N82
+# disk 4
+#     - /dev/disk/by-id/scsi-SSEAGATE_ST300MM0006_S0K06VZ0
+
+## RAID
+
+mdadm_arrays:
+  - name: md/compute-2-system
+    devices:
+      - '/dev/disk-0/compute-2-system'
+      - '/dev/disk-3/compute-2-system'
+      - '/dev/disk-6/compute-2-system'
+      - '/dev/disk-9/compute-2-system'
+    level: '5'
+    mountpoint: '/mnt/compute-2-system'
+    state: 'present'
