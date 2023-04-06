@@ -113,3 +113,9 @@
   tags: mdadm
   roles:
     - role: mrlesmithjr.mdadm
+
+# KVM
+- hosts: all
+  tags: kvm
+  roles:
+    - role: mrlesmithjr.kmv

@@ -119,3 +119,7 @@ roles:
   - src: git+https://github.com/mrlesmithjr/ansible-mdadm
     name: mrlesmithjr.mdadm
     version: a0ee021fa2c2d3e9f47b77f909b6210db52dad92
+
+  - src: git+https://github.com/mrlesmithjr/ansible-kvm
+    name: mrlesmithjr.kvm
+    version: 77a16fd70952d1aafeb809c9b3ded6b7671bb55b
