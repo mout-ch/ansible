@@ -101,3 +101,8 @@
   tags: ddns
   roles:
     - role: maxhoesel.ddclient
+
+- hosts: all
+  tags: lvm
+  roles:
+    - role: mrlesmithjr.lvm
