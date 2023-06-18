@@ -123,3 +123,7 @@ roles:
   - src: git+https://github.com/mrlesmithjr/ansible-kvm
     name: mrlesmithjr.kvm
     version: 77a16fd70952d1aafeb809c9b3ded6b7671bb55b
+
+  - src: git+https://github.com/rootmout/ansible-kvm.git
+    name: rootmout.kvm
+    version: 8617a80e6a06af9f39503f53ffa48e979d16dd68
