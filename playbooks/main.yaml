@@ -119,3 +119,11 @@
   tags: kvm
   roles:
     - role: rootmout.kvm
+  vars_files:
+    - ../vars/ssh_keys.yml
+
+# GRUB
+- hosts: all
+  tags: grub
+  roles:
+    - role: robertdebock.grub

@@ -1,4 +1,12 @@
 ---
+
+# GRUB
+# Enable IOMMU to passthrough PCI devices to VMs (eg: a network card)
+grub_options:
+    - option: intel_iommu
+      value: "on"
+
+# Network
 netplan_enabled: true
 netplan_configuration:
   network:
@@ -28,8 +36,8 @@ lvm_groups:
         create: true
         filesystem: xfs
         mount: false
-      - lvname: compute-2-system
-        size: 50G
+      - lvname: libvirt-root-images
+        size: 100G
         create: true
 
   - vgname: disk-3
@@ -45,8 +53,8 @@ lvm_groups:
         create: true
         filesystem: xfs
         mount: false
-      - lvname: compute-2-system
-        size: 50G
+      - lvname: libvirt-root-images
+        size: 100G
         create: true
 
   - vgname: disk-6
@@ -62,8 +70,8 @@ lvm_groups:
         create: true
         filesystem: xfs
         mount: false
-      - lvname: compute-2-system
-        size: 50G
+      - lvname: libvirt-root-images
+        size: 100G
         create: true
 
   - vgname: disk-9
@@ -79,8 +87,8 @@ lvm_groups:
         create: true
         filesystem: xfs
         mount: false
-      - lvname: compute-2-system
-        size: 50G
+      - lvname: libvirt-root-images
+        size: 100G
         create: true
 
 # disk 1
@@ -91,60 +99,112 @@ lvm_groups:
 ## RAID
 
 mdadm_arrays:
-  - name: md/compute-2-system
+  - name: md/libvirt-root-images
     devices:
-      - '/dev/disk-0/compute-2-system'
-      - '/dev/disk-3/compute-2-system'
-      - '/dev/disk-6/compute-2-system'
-      - '/dev/disk-9/compute-2-system'
+      - '/dev/disk-0/libvirt-root-images'
+      - '/dev/disk-3/libvirt-root-images'
+      - '/dev/disk-6/libvirt-root-images'
+      - '/dev/disk-9/libvirt-root-images'
     filesystem: 'ext4'
     level: '5'
-    mountpoint: '/mnt/compute-2-system'
+    mountpoint: '/mnt/libvirt-root-images'
     state: 'present'
+
+# KVM
+
+## Host
 
 kvm_config: true
 kvm_config_virtual_networks: true
 kvm_enable_libvirtd_syslog: true
 kvm_manage_vms: true
 kvm_disable_apparmor: false
-kvm_images_path: /mnt/compute-2-system
+kvm_images_path: /mnt/libvirt-root-images
+
+## Guests
+
 kvm_vms:
-  - name: dc1
+  - name: gate
     autostart: true
-    # Define boot devices in order of preference
+    state: running
+    memory: 5120
+    vcpu: 4
+    graphics: false
     boot_devices:
       - hd
-    graphics: false
-    # Define disks in MB
     disks:
-        # ide, scsi, virtio, xen, usb, sata or sd
       - disk_driver: virtio
         name: system
         type: file
-        size: 5120
-        backing_file: https://cloud-images.ubuntu.com/mantic/20230612/mantic-server-cloudimg-amd64.img
-        override: true
-
-    memory: 512
+        size: 10240
+        backing_file: https://github.com/rootmout/vyos-vm-images/releases/download/v0.1.2/vyos-1.4.0-cloud-init-10G-qemu.img
+        backing_file_format: qcow2
     network_interfaces:
       - source: default
         network_driver: virtio
         portgroup: vlan-102
         type: network
-    state: running
-    vcpu: 2
+    hostdevs:
+      - alias: uplink
+        type: pci
+        source:
+          domain: 0x0000
+          bus: 0x01
+          slot: 0x00
+          function: 0x3
+        destination:
+          domain: 0x0000
+          bus: 0x00
+          slot: 0x05
+          function: 0x0
+      - alias: public-network
+        type: pci
+        source:
+          domain: 0x0000
+          bus: 0x01
+          slot: 0x00
+          function: 0x2
+        destination:
+          domain: 0x0000
+          bus: 0x00
+          slot: 0x06
+          function: 0x0
     cloudinit:
       enabled: true
-      meta-data:
-        instance-id: dc1 # TODO support default value to vm name
-        local-hostname: dc1
-      user-data:
-        users:
-          - default
-          - name: rootmout
-            sudo: ["ALL=(ALL) NOPASSWD:ALL"]
-            groups: sudo
-            shell: /bin/bash
-            ssh_authorized_keys:
-              - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICvso1QjsOLrWyVoqkqQjre0TD6LE9djVWTCvkUDjgoe
-      
+      files:
+        meta-data: |
+          instance-id: gate
+          local-hostname: gate
+        user-data: |
+            #cloud-config
+            vyos_config_commands:
+              - set system host-name 'gate'
+              - set service ssh disable-password-authentication
+            users:
+              - name: vyos
+                passwd: '{{ root_password_hashed }}'
+                shell: /bin/bash
+                lock-passwd: false
+                ssh_pwauth: false
+                chpasswd: { expire: False }
+                sudo: ALL=(ALL) NOPASSWD:ALL
+                groups: adm,audio,cdrom,dialout,dip,floppy,lxd,netdev,plugdev,sudo,video
+                ssh_authorized_keys:
+                {{ ssh_authorized_keys | flatten | to_nice_yaml(indent=6) }}
+        network-config: |
+          version: 2
+          ethernets:
+            eth0:
+              match:
+                macaddress: "24:6e:96:0c:b7:67"
+              addresses: [ 192.168.1.101/24 ]
+              gateway4: 192.168.1.1
+              nameservers:
+                addresses: [8.8.8.8, 8.8.4.4]
+              dhcp4: false
+              dhcp6: false
+            eth1:
+              match:
+                macaddress: "24:6e:96:0c:b7:66"
+              dhcp4: false
+              dhcp6: false
