@@ -121,6 +121,20 @@ kvm_manage_vms: true
 kvm_disable_apparmor: false
 kvm_images_path: /mnt/libvirt-root-images
 
+## Network
+
+kvm_virtual_networks:
+  - name: client
+    bridge_name: virbr1
+    mode: private
+    autostart: true
+    state: active
+  - name: ceph
+    bridge_name: virbr2
+    mode: private
+    autostart: true
+    state: active
+
 ## Guests
 
 kvm_vms:
@@ -140,10 +154,14 @@ kvm_vms:
         backing_file: https://github.com/rootmout/vyos-vm-images/releases/download/v0.1.2/vyos-1.4.0-cloud-init-10G-qemu.img
         backing_file_format: qcow2
     network_interfaces:
-      - source: default
+      - source: client
         network_driver: virtio
-        portgroup: vlan-102
         type: network
+        mac: 52:54:00:20:70:f0
+      - source: ceph
+        network_driver: virtio
+        type: network
+        mac: 52:54:00:7e:96:38
     hostdevs:
       - alias: uplink
         type: pci
@@ -201,10 +219,5 @@ kvm_vms:
               gateway4: 192.168.1.1
               nameservers:
                 addresses: [8.8.8.8, 8.8.4.4]
-              dhcp4: false
-              dhcp6: false
-            eth1:
-              match:
-                macaddress: "24:6e:96:0c:b7:66"
               dhcp4: false
               dhcp6: false
