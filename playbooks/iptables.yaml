@@ -61,6 +61,16 @@
         jump: DNAT
         to_destination: 192.168.11.20:30574
 
+    - name: port-forward minecraft-3
+      iptables:
+        table: nat
+        chain: PREROUTING
+        destination: 192.168.1.100/24
+        destination_port: 25567
+        protocol: tcp
+        jump: DNAT
+        to_destination: 192.168.11.20:30575
+
     - name: Save current state of the firewall in system file
       community.general.iptables_state:
         state: saved
