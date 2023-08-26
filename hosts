@@ -30,3 +30,6 @@ consul_client
 
 [vault:children]
 ceph
+
+[vyos]
+gate-2.blotzheim.infra.mout.ch
