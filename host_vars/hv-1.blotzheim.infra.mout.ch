@@ -230,3 +230,60 @@ kvm_vms:
                 addresses: [8.8.8.8, 8.8.4.4]
               dhcp4: false
               dhcp6: false
+
+  - name: ceph-1
+    autostart: true
+    state: running
+    memory: 8192
+    vcpu: 4
+    graphics: false
+    boot_devices:
+      - hd
+    disks:
+      - disk_driver: virtio
+        name: system
+        type: file
+        size: 10240
+        backing_file: https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64-disk-kvm.img
+        backing_file_format: qcow2
+    network_interfaces:
+      - source: lan
+        network_driver: virtio
+        type: network
+        mac: 52:54:00:d7:0a:40
+      - source: ceph
+        network_driver: virtio
+        type: network
+        mac: 52:54:00:a5:13:8a
+    cloudinit:
+      enabled: true
+      files:
+        meta-data: |
+          instance-id: ceph-1
+          local-hostname: ceph-1
+        user-data: |
+            #cloud-config
+            ssh_pwauth: false
+            users:
+              - name: root
+                passwd: '{{ root_password_hashed }}'
+                shell: /bin/bash
+                lock-passwd: false
+                ssh_pwauth: false
+                chpasswd: { expire: False }
+                sudo: ALL=(ALL) NOPASSWD:ALL
+                groups: adm,audio,cdrom,dialout,dip,floppy,lxd,netdev,plugdev,sudo,video
+                ssh_authorized_keys:
+                {{ ssh_authorized_keys | flatten | to_nice_yaml(indent=6) }}
+        network-config: |
+          version: 2
+          ethernets:
+            eth0:
+              match:
+                macaddress: "52:54:00:d7:0a:40"
+              addresses: [ 192.168.14.10/24 ]
+              gateway4: 192.168.14.1
+              nameservers:
+                addresses: [8.8.8.8, 8.8.4.4]
+              dhcp4: false
+              dhcp6: false
