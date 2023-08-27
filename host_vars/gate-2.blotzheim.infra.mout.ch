@@ -16,14 +16,21 @@ vyos_interfaces:
 
     # virtual
   - name: eth2
-    description: client
+    description: dmz
     mac: 52:54:00:20:70:f0
     mtu: 1500
     addresse: 192.168.13.1/24
 
     # virtual
   - name: eth3
+    description: lan
+    mac: 52:54:00:8e:81:c3
+    mtu: 1500
+    addresse: 192.168.14.1/24
+
+    # virtual
+  - name: eth4
     description: ceph
     mac: 52:54:00:7e:96:38
     mtu: 1500
-    addresse: 192.168.14.1/24
+    addresse: 192.168.15.1/24
