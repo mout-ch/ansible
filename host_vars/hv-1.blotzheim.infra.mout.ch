@@ -124,13 +124,18 @@ kvm_images_path: /mnt/libvirt-root-images
 ## Network
 
 kvm_virtual_networks:
-  - name: client
+  - name: dmz
     bridge_name: virbr1
     mode: private
     autostart: true
     state: active
-  - name: ceph
+  - name: lan
     bridge_name: virbr2
+    mode: private
+    autostart: true
+    state: active
+  - name: ceph
+    bridge_name: virbr3
     mode: private
     autostart: true
     state: active
@@ -154,10 +159,14 @@ kvm_vms:
         backing_file: https://github.com/rootmout/vyos-vm-images/releases/download/v0.1.2/vyos-1.4.0-cloud-init-10G-qemu.img
         backing_file_format: qcow2
     network_interfaces:
-      - source: client
+      - source: dmz
         network_driver: virtio
         type: network
         mac: 52:54:00:20:70:f0
+      - source: lan
+        network_driver: virtio
+        type: network
+        mac: 52:54:00:8e:81:c3
       - source: ceph
         network_driver: virtio
         type: network

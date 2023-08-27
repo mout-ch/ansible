@@ -5,6 +5,9 @@ collections:
   - name: community.general
     version: 1.3.6
 
+  - name: vyos.vyos
+    version: 4.1.0
+
   - name: community.hashi_vault
     src: git+https://github.com/ansible-collections/community.hashi_vault
     version: 7e148990c2f335721f6f0df180076e9ff287eed5
