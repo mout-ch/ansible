@@ -1,0 +1,22 @@
+---
+- name: configure interfaces
+  hosts: vyos
+  connection: network_cli
+  tasks:
+
+    - name: configure interfaces L2 settings
+      vyos.vyos.vyos_config:
+        lines:
+          - set interfaces ethernet {{ item.name }} hw-id '{{ item.mac }}'
+          - set interfaces ethernet {{ item.name }} description '{{ item.description }}'
+          - set interfaces ethernet {{ item.name }} mtu '{{ item.mtu }}'
+      loop: "{{ vyos_interfaces }}"
+
+    - name: configure interfaces L3 settings
+      vyos.vyos.vyos_l3_interfaces:
+        config:
+        - name: "{{ item.name }}"
+          ipv4:
+          - address: "{{ item.addresse }}"
+        state: merged
+      loop: "{{ vyos_interfaces }}"

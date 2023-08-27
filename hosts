@@ -32,4 +32,4 @@ consul_client
 ceph
 
 [vyos]
-gate-2.blotzheim.infra.mout.ch
+gate-2.blotzheim.infra.mout.ch ansible_user=vyos ansible_network_os=vyos
