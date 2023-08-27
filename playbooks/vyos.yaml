@@ -29,3 +29,35 @@
           - address: "{{ item.addresse }}"
         state: merged
       loop: "{{ vyos_interfaces }}"
+
+    - name: configure DHCP for public network
+      vyos.vyos.vyos_config:
+        lines:
+          - set service dhcp-server shared-network-name 'public' subnet 192.168.2.0/24 default-router '192.168.2.1'
+          - set service dhcp-server shared-network-name 'public' subnet 192.168.2.0/24 name-server '192.168.2.1'
+          - set service dhcp-server shared-network-name 'public' subnet 192.168.2.0/24 domain-name 'public-network'
+          - set service dhcp-server shared-network-name 'public' subnet 192.168.2.0/24 lease '86400'
+          - set service dhcp-server shared-network-name 'public' subnet 192.168.2.0/24 range 0 start '192.168.2.100'
+          - set service dhcp-server shared-network-name 'public' subnet 192.168.2.0/24 range 0 stop '192.168.2.254'
+
+    - name: configure source NAT for LAN & public network
+      vyos.vyos.vyos_config:
+        lines:
+          - set nat source rule 100 outbound-interface 'eth0'
+          - set nat source rule 100 source address '192.168.2.0/24'   # public
+          - set nat source rule 100 translation address masquerade
+          - set nat source rule 200 outbound-interface 'eth0'
+          - set nat source rule 200 source address '192.168.14.0/24'  # lan
+          - set nat source rule 200 translation address masquerade
+
+    - name: configure DNS
+      vyos.vyos.vyos_config:
+        lines:
+          - set service dns forwarding cache-size '0'
+          - set service dns forwarding allow-from '192.168.0.0/16'
+          - set service dns forwarding listen-address '192.168.2.1'
+          - set service dns forwarding listen-address '192.168.13.1'
+          - set service dns forwarding listen-address '192.168.14.1'
+          - set service dns forwarding listen-address '192.168.15.1'
+          - set service dns forwarding name-server '8.8.8.8'
+          - set service dns forwarding name-server '8.8.4.4'
