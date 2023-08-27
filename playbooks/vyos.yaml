@@ -4,6 +4,15 @@
   connection: network_cli
   tasks:
 
+    - name: enable SSH
+      vyos.vyos.vyos_config:
+        lines:
+          - set service ssh port '22'
+          - set service ssh disable-password-authentication
+          - set service ssh loglevel info
+          - set service ssh dynamic-protection
+          - set service ssh dynamic-protection detect-time 3600
+
     - name: configure interfaces L2 settings
       vyos.vyos.vyos_config:
         lines:
