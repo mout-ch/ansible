@@ -246,6 +246,10 @@ kvm_vms:
         size: 10240
         backing_file: https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64-disk-kvm.img
         backing_file_format: qcow2
+      - disk_driver: virtio
+        name: ceph
+        type: block
+        path: /dev/disk-0/ceph
     network_interfaces:
       - source: lan
         network_driver: virtio
