@@ -211,9 +211,7 @@ kvm_vms:
               - name: vyos
                 passwd: '{{ root_password_hashed }}'
                 shell: /bin/bash
-                lock-passwd: false
-                ssh_pwauth: false
-                chpasswd: { expire: False }
+                lock_passwd: false
                 sudo: ALL=(ALL) NOPASSWD:ALL
                 groups: adm,audio,cdrom,dialout,dip,floppy,lxd,netdev,plugdev,sudo,video
                 ssh_authorized_keys:
@@ -268,13 +266,12 @@ kvm_vms:
         user-data: |
             #cloud-config
             ssh_pwauth: false
+            chpasswd: { expire: False }
             users:
               - name: root
                 passwd: '{{ root_password_hashed }}'
                 shell: /bin/bash
-                lock-passwd: false
-                ssh_pwauth: false
-                chpasswd: { expire: False }
+                lock_passwd: false
                 sudo: ALL=(ALL) NOPASSWD:ALL
                 groups: adm,audio,cdrom,dialout,dip,floppy,lxd,netdev,plugdev,sudo,video
                 ssh_authorized_keys:
