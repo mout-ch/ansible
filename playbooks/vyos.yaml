@@ -74,79 +74,99 @@
           - set firewall group network-group NET-MANAGEMENT network '192.168.1.100/32'
 
           - set firewall name WAN-LOCAL default-action 'drop'
+
           - set firewall name WAN-LOCAL rule 1010 action 'accept'
           - set firewall name WAN-LOCAL rule 1010 state established 'enable'
           - set firewall name WAN-LOCAL rule 1010 state related 'enable'
+
           - set firewall name WAN-LOCAL rule 1011 action 'drop'
           - set firewall name WAN-LOCAL rule 1011 state invalid 'enable'
+
           - set firewall name WAN-LOCAL rule 1020 action 'accept'
           - set firewall name WAN-LOCAL rule 1020 icmp type-name 'echo-request'
           - set firewall name WAN-LOCAL rule 1020 protocol 'icmp'
           - set firewall name WAN-LOCAL rule 1020 state new 'enable'
-          - set firewall name WAN-LOCAL rule 1110 action 'accept'
-          - set firewall name WAN-LOCAL rule 1110 destination port '161'
-          - set firewall name WAN-LOCAL rule 1110 protocol 'udp'
-          - set firewall name WAN-LOCAL rule 1110 source group network-group 'NET-MANAGEMENT'
-          - set firewall name WAN-LOCAL rule 1110 state new 'enable'
+
+          # - set firewall name WAN-LOCAL rule 1110 action 'accept'
+          # - set firewall name WAN-LOCAL rule 1110 destination port '161'
+          # - set firewall name WAN-LOCAL rule 1110 protocol 'udp'
+          # - set firewall name WAN-LOCAL rule 1110 source group network-group 'NET-MANAGEMENT'
+          # - set firewall name WAN-LOCAL rule 1110 state new 'enable'
+
           - set firewall name WAN-LOCAL rule 1100 action 'drop'
           - set firewall name WAN-LOCAL rule 1100 destination port '22'
           - set firewall name WAN-LOCAL rule 1100 protocol 'tcp'
           - set firewall name WAN-LOCAL rule 1100 recent count '4'
           - set firewall name WAN-LOCAL rule 1100 recent time 'minute'
-          - set firewall name WAN-LOCAL rule 1100 source group network-group 'NET-MANAGEMENT'
+          # - set firewall name WAN-LOCAL rule 1100 source group network-group 'NET-MANAGEMENT'
           - set firewall name WAN-LOCAL rule 1100 state new 'enable'
+
           - set firewall name WAN-LOCAL rule 1101 action 'accept'
           - set firewall name WAN-LOCAL rule 1101 destination port '22'
           - set firewall name WAN-LOCAL rule 1101 protocol 'tcp'
-          - set firewall name WAN-LOCAL rule 1101 source group network-group 'NET-MANAGEMENT'
+          # - set firewall name WAN-LOCAL rule 1101 source group network-group 'NET-MANAGEMENT'
           - set firewall name WAN-LOCAL rule 1101 state new 'enable'
 
+
           - set firewall name LAN-LOCAL default-action 'drop'
+
           - set firewall name LAN-LOCAL rule 1010 action 'accept'
           - set firewall name LAN-LOCAL rule 1010 state established 'enable'
           - set firewall name LAN-LOCAL rule 1010 state related 'enable'
+
           - set firewall name LAN-LOCAL rule 1011 action 'drop'
           - set firewall name LAN-LOCAL rule 1011 state invalid 'enable'
+
           - set firewall name LAN-LOCAL rule 1020 action 'accept'
           - set firewall name LAN-LOCAL rule 1020 icmp type-name 'echo-request'
           - set firewall name LAN-LOCAL rule 1020 protocol 'icmp'
           - set firewall name LAN-LOCAL rule 1020 state new 'enable'
+
           - set firewall name LAN-LOCAL rule 1030 action 'accept'
           - set firewall name LAN-LOCAL rule 1030 destination port '67'
           - set firewall name LAN-LOCAL rule 1030 protocol 'udp'
           - set firewall name LAN-LOCAL rule 1030 state new 'enable'
+
           - set firewall name LAN-LOCAL rule 1040 action 'accept'
           - set firewall name LAN-LOCAL rule 1040 destination port '53'
           - set firewall name LAN-LOCAL rule 1040 protocol 'tcp_udp'
           - set firewall name LAN-LOCAL rule 1040 state new 'enable'
-          - set firewall name LAN-LOCAL rule 1100 action 'drop'
-          - set firewall name LAN-LOCAL rule 1100 destination port '22'
-          - set firewall name LAN-LOCAL rule 1100 protocol 'tcp'
-          - set firewall name LAN-LOCAL rule 1100 recent count '4'
-          - set firewall name LAN-LOCAL rule 1100 recent time 'minute'
-          - set firewall name LAN-LOCAL rule 1100 source group network-group 'NET-MANAGEMENT'
-          - set firewall name LAN-LOCAL rule 1100 state new 'enable'
-          - set firewall name LAN-LOCAL rule 1101 action 'accept'
-          - set firewall name LAN-LOCAL rule 1101 destination port '22'
-          - set firewall name LAN-LOCAL rule 1101 protocol 'tcp'
-          - set firewall name LAN-LOCAL rule 1101 source group network-group 'NET-MANAGEMENT'
-          - set firewall name LAN-LOCAL rule 1101 state new 'enable'
-          - set firewall name LAN-LOCAL rule 1110 action 'accept'
-          - set firewall name LAN-LOCAL rule 1110 destination port '161'
-          - set firewall name LAN-LOCAL rule 1110 protocol 'udp'
-          - set firewall name LAN-LOCAL rule 1110 source group network-group 'NET-MANAGEMENT'
-          - set firewall name LAN-LOCAL rule 1110 state new 'enable'
+
+          # - set firewall name LAN-LOCAL rule 1100 action 'drop'
+          # - set firewall name LAN-LOCAL rule 1100 destination port '22'
+          # - set firewall name LAN-LOCAL rule 1100 protocol 'tcp'
+          # - set firewall name LAN-LOCAL rule 1100 recent count '4'
+          # - set firewall name LAN-LOCAL rule 1100 recent time 'minute'
+          # - set firewall name LAN-LOCAL rule 1100 source group network-group 'NET-MANAGEMENT'
+          # - set firewall name LAN-LOCAL rule 1100 state new 'enable'
+
+          # - set firewall name LAN-LOCAL rule 1101 action 'accept'
+          # - set firewall name LAN-LOCAL rule 1101 destination port '22'
+          # - set firewall name LAN-LOCAL rule 1101 protocol 'tcp'
+          # - set firewall name LAN-LOCAL rule 1101 source group network-group 'NET-MANAGEMENT'
+          # - set firewall name LAN-LOCAL rule 1101 state new 'enable'
+
+          # - set firewall name LAN-LOCAL rule 1110 action 'accept'
+          # - set firewall name LAN-LOCAL rule 1110 destination port '161'
+          # - set firewall name LAN-LOCAL rule 1110 protocol 'udp'
+          # - set firewall name LAN-LOCAL rule 1110 source group network-group 'NET-MANAGEMENT'
+          # - set firewall name LAN-LOCAL rule 1110 state new 'enable'
+
 
           - set firewall interface eth0 local name 'WAN-LOCAL'
           # - set interfaces ethernet eth1 firewall local name 'DMZ-LOCAL'
           - set firewall interface eth3 local name 'LAN-LOCAL'
 
+
           - set firewall name LAN-OUT default-action 'drop'
+
           - set firewall name LAN-OUT rule 1010 action 'accept'
           - set firewall name LAN-OUT rule 1010 state established 'enable'
           - set firewall name LAN-OUT rule 1010 state related 'enable'
+
           - set firewall name LAN-OUT rule 1011 action 'drop'
           - set firewall name LAN-OUT rule 1011 state invalid 'enable'
+
           - set firewall name LAN-OUT rule 1020 action 'accept'
           - set firewall name LAN-OUT rule 1020 icmp type-name 'echo-request'
           - set firewall name LAN-OUT rule 1020 protocol 'icmp'
