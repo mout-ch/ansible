@@ -37,7 +37,7 @@ lvm_groups:
         filesystem: xfs
         mount: false
       - lvname: libvirt-root-images
-        size: 100G
+        size: 500G
         create: true
 
   - vgname: disk-3
@@ -54,7 +54,7 @@ lvm_groups:
         filesystem: xfs
         mount: false
       - lvname: libvirt-root-images
-        size: 100G
+        size: 500G
         create: true
 
   - vgname: disk-6
@@ -71,7 +71,7 @@ lvm_groups:
         filesystem: xfs
         mount: false
       - lvname: libvirt-root-images
-        size: 100G
+        size: 500G
         create: true
 
   - vgname: disk-9
@@ -88,7 +88,7 @@ lvm_groups:
         filesystem: xfs
         mount: false
       - lvname: libvirt-root-images
-        size: 100G
+        size: 500G
         create: true
 
 # disk 1
@@ -241,7 +241,7 @@ kvm_vms:
       - disk_driver: virtio
         name: system
         type: file
-        size: 10240
+        size: 102400
         backing_file: https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64-disk-kvm.img
         backing_file_format: qcow2
       - disk_driver: virtio
