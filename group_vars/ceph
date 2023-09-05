@@ -1,0 +1,3 @@
+---
+ceph_tools_install_cephadm: true
+ceph_tools_install_ceph: false

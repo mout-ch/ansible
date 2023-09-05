@@ -1,4 +1,10 @@
 ---
+- hosts: all
+  tags: fqdn
+  tasks:
+    - name: "Set hostname"
+      ansible.builtin.hostname:
+        name: "{{ fqdn }}"
 
 - hosts: all
   roles:
@@ -34,15 +40,15 @@
   roles:
     - cloudalchemy.node_exporter
 
-- hosts: consul
-  tags: consul
-  roles:
-    - ansible-consul
-
-- hosts: consul
-  tags: dns
-  roles:
-    - dns
+#- hosts: consul
+#  tags: consul
+#  roles:
+#    - ansible-consul
+#
+#- hosts: consul
+#  tags: dns
+#  roles:
+#    - dns
 
 - hosts: vault
   roles:
@@ -75,6 +81,11 @@
   tags: docker
   roles:
     - cri.docker
+
+- hosts: ceph
+  tags: chrony
+  roles:
+    - mrlesmithjr.chrony
 
 - hosts: ceph
   tags: cephadm

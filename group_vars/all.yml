@@ -23,7 +23,7 @@ alter_security_groups: false
 #ansible_ssh_common_args: '-o ProxyCommand="ssh -W %h:%p -q root@gate-1.hirsingue.infra.mout.ch"'
 
 ### Ceph
-ceph_release: pacific
+ceph_release: reef
 
 ### Consul
 consul_install_dependencies: false
