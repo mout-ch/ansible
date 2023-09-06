@@ -23,6 +23,8 @@ netplan_configuration:
         dhcp4: false
         dhcp6: false
 
-
-
+vault_tls_ca_file: ca.pem
+vault_tls_key_file: ceph-3.key
+vault_tls_cert_file: ceph-3.pem
+vault_api_addr: "{{ 'https://' ~ fqdn ~ ':8200' }}"
 
