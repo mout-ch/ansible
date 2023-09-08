@@ -15,6 +15,7 @@ under-1.infra.mout.ch
 
 [compute]
 compute-1.hirsingue.infra.mout.ch
+compute-2.blotzheim.infra.mout.ch
 
 [hypervisor]
 hv-1.blotzheim.infra.mout.ch

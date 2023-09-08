@@ -114,19 +114,19 @@
     - role: maxhoesel.ddclient
 
 # LVM
-- hosts: all
+- hosts: hypervisor
   tags: lvm
   roles:
     - role: mrlesmithjr.lvm
 
 # RAID
-- hosts: all
+- hosts: hypervisor
   tags: mdadm
   roles:
     - role: mrlesmithjr.mdadm
 
 # KVM
-- hosts: all
+- hosts: hypervisor
   tags: kvm
   roles:
     - role: rootmout.kvm
