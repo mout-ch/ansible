@@ -13,8 +13,11 @@ ceph-[1:3].blotzheim.infra.mout.ch
 [undercloud]
 under-1.infra.mout.ch
 
+[k3s:children]
+compute
+
 [compute]
-compute-1.hirsingue.infra.mout.ch
+;compute-1.hirsingue.infra.mout.ch
 compute-2.blotzheim.infra.mout.ch
 
 [hypervisor]

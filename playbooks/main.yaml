@@ -94,10 +94,38 @@
 
 - import_playbook: iptables.yaml
 
-- hosts: compute-1.hirsingue.infra.mout.ch
+- hosts: compute-2.blotzheim.infra.mout.ch
+  tags: [k3s-cache, k3s]
+  tasks:
+    - name: Create Partition on /dev/vdb
+      parted:
+        number: 1
+        device: /dev/vdb
+        state: present
+        part_type: primary
+        fs_type: ext4
+      register: create_partition_result
+
+    - name: Format Partition with ext4
+      command: mkfs.ext4 /dev/vdb1
+      when: create_partition_result.changed
+
+    - name: Ensure k3s db Directory Exists
+      file:
+        path: "{{ k3s_db_path }}"
+        state: directory
+      become: yes  # Use sudo to create the directory if needed
+
+    - name: Mount Partition to k3s directory
+      mount:
+        path: "{{ k3s_db_path }}"
+        src: /dev/vdb1
+        fstype: ext4
+        state: mounted
+        opts: defaults
+
+- hosts: k3s
   tags: k3s
-  vars:
-    k3s_release_version: latest
   roles:
      - role: xanmanning.k3s
 

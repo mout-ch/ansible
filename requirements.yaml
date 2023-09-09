@@ -86,8 +86,6 @@ roles:
     version: v1.14.2
   - name: timorunge.sssd
     version: 0.5.5
-  - name: xanmanning.k3s
-    version: v2.11.1
 
   - src: https://github.com/ansible-community/ansible-vault.git
     name: ansible-community.ansible-vault
@@ -134,3 +132,7 @@ roles:
   - src: git+https://github.com/robertdebock/ansible-role-grub.git
     name: robertdebock.grub
     version: 1a7ee3bb11c927af77d5db492fbcfbba590b8ad5
+
+  - src: git+https://github.com/PyratLabs/ansible-role-k3s.git
+    name: xanmanning.k3s
+    version: 37cca2e4874296961cc0138533cadd824f4fdb74 # 3.4.2
