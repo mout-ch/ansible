@@ -22,3 +22,6 @@ netplan_configuration:
           addresses: [ 8.8.8.8, 8.8.4.4 ]
         dhcp4: false
         dhcp6: false
+k3s_server_manifests_templates:
+  - ../files/k3s/argocd.yaml.j2
+  - ../files/k3s/root.yaml.j2
