@@ -234,12 +234,7 @@ kvm_vms:
             eth0:
               match:
                 macaddress: "24:6e:96:0c:b7:67"
-              addresses: [ 192.168.1.101/24 ]
-              gateway4: 192.168.1.1
-              nameservers:
-                addresses: [8.8.8.8, 8.8.4.4]
-              dhcp4: false
-              dhcp6: false
+              dhcp4: true
 
   - name: ceph-1
     autostart: true
