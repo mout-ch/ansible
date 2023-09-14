@@ -70,7 +70,7 @@
 
           - set load-balancing reverse-proxy service https mode 'tcp'
           - set load-balancing reverse-proxy service https port '443'
-          - set load-balancing reverse-proxy service https backend 'k3s-http'
+          - set load-balancing reverse-proxy service https backend 'k3s-https'
           - set load-balancing reverse-proxy backend k3s-https mode 'tcp'
           - set load-balancing reverse-proxy backend k3s-https balance 'source-address'
           - set load-balancing reverse-proxy backend k3s-https server compute-2 address '192.168.13.11'
