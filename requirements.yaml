@@ -12,6 +12,10 @@ collections:
     src: git+https://github.com/ansible-collections/community.hashi_vault
     version: 7e148990c2f335721f6f0df180076e9ff287eed5
 
+  - src: git+https://github.com/prometheus-community/ansible.git
+    name: prometheus.prometheus
+    version: b98d4a3f4c4dec22807ff8adc1ea83ba4bae9145 # 0.6.0
+
 roles:
   - name: cri.bootstrap
     src: git+https://gitlab.cri.epita.fr/cri/iac/ansible/roles/bootstrap.git

@@ -38,7 +38,7 @@
 - hosts: all:!ceph
   tags: node-exporter
   roles:
-    - cloudalchemy.node_exporter
+    - prometheus.prometheus.node_exporter
 
 #- hosts: consul
 #  tags: consul
