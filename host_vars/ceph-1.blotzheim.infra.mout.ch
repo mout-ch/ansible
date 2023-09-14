@@ -26,6 +26,7 @@ netplan_configuration:
 vault_tls_ca_file: ca.pem
 vault_tls_key_file: ceph-1.key
 vault_tls_cert_file: ceph-1.pem
+vault_tls_disable: true
 vault_api_addr: "{{ 'https://' ~ fqdn ~ ':8200' }}"
 
 
