@@ -166,3 +166,30 @@
   tags: grub
   roles:
     - role: robertdebock.grub
+
+- hosts: compute-2.blotzheim.infra.mout.ch
+  tags: vault-operator
+  tasks:
+    - name: Install pip3
+      apt:
+        name: python3-pip
+        state: present
+        update_cache: true
+    - name: install kubernetes python on host
+      pip:
+        name: kubernetes
+        state: present
+    - name: Create and inject vault operator token in k3s
+      kubernetes.core.k8s:
+        state: present
+        kubeconfig: /etc/rancher/k3s/k3s.yaml
+        definition:
+          apiVersion: v1
+          kind: Secret
+          metadata:
+            name: vault-secrets-operator
+            namespace: vault-operator
+          type: Opaque
+          data:
+            VAULT_TOKEN: "{{ lookup('community.hashi_vault.vault_token_create', ttl='24h', policies=['vault-secrets-operator'], validate_certs=false).auth.client_token | b64encode }}"
+            VAULT_TOKEN_LEASE_DURATION: "{{ 86400 | b64encode }}"
