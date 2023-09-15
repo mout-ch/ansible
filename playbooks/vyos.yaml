@@ -132,7 +132,7 @@
           - set firewall name WAN-LOCAL rule 1101 state new 'enable'
 
           - set firewall name WAN-LOCAL rule 1200 action 'drop'
-          - set firewall name WAN-LOCAL rule 1200 destination port '443'
+          - set firewall name WAN-LOCAL rule 1200 destination port '80'
           - set firewall name WAN-LOCAL rule 1200 protocol 'tcp'
           - set firewall name WAN-LOCAL rule 1200 recent count '10'
           - set firewall name WAN-LOCAL rule 1200 recent time 'minute'
@@ -140,24 +140,38 @@
           - set firewall name WAN-LOCAL rule 1200 state new 'enable'
 
           - set firewall name WAN-LOCAL rule 1201 action 'accept'
-          - set firewall name WAN-LOCAL rule 1201 destination port '443'
+          - set firewall name WAN-LOCAL rule 1201 destination port '80'
           - set firewall name WAN-LOCAL rule 1201 protocol 'tcp'
           # - set firewall name WAN-LOCAL rule 1201 source group network-group 'NET-MANAGEMENT'
           - set firewall name WAN-LOCAL rule 1201 state new 'enable'
 
           - set firewall name WAN-LOCAL rule 1300 action 'drop'
-          - set firewall name WAN-LOCAL rule 1300 destination port '6443'
+          - set firewall name WAN-LOCAL rule 1300 destination port '443'
           - set firewall name WAN-LOCAL rule 1300 protocol 'tcp'
-          - set firewall name WAN-LOCAL rule 1300 recent count '4'
+          - set firewall name WAN-LOCAL rule 1300 recent count '10'
           - set firewall name WAN-LOCAL rule 1300 recent time 'minute'
           # - set firewall name WAN-LOCAL rule 1300 source group network-group 'NET-MANAGEMENT'
           - set firewall name WAN-LOCAL rule 1300 state new 'enable'
 
           - set firewall name WAN-LOCAL rule 1301 action 'accept'
-          - set firewall name WAN-LOCAL rule 1301 destination port '6443'
+          - set firewall name WAN-LOCAL rule 1301 destination port '443'
           - set firewall name WAN-LOCAL rule 1301 protocol 'tcp'
           # - set firewall name WAN-LOCAL rule 1301 source group network-group 'NET-MANAGEMENT'
           - set firewall name WAN-LOCAL rule 1301 state new 'enable'
+
+          - set firewall name WAN-LOCAL rule 1400 action 'drop'
+          - set firewall name WAN-LOCAL rule 1400 destination port '6443'
+          - set firewall name WAN-LOCAL rule 1400 protocol 'tcp'
+          - set firewall name WAN-LOCAL rule 1400 recent count '4'
+          - set firewall name WAN-LOCAL rule 1400 recent time 'minute'
+          # - set firewall name WAN-LOCAL rule 1400 source group network-group 'NET-MANAGEMENT'
+          - set firewall name WAN-LOCAL rule 1400 state new 'enable'
+
+          - set firewall name WAN-LOCAL rule 1401 action 'accept'
+          - set firewall name WAN-LOCAL rule 1401 destination port '6443'
+          - set firewall name WAN-LOCAL rule 1401 protocol 'tcp'
+          # - set firewall name WAN-LOCAL rule 1401 source group network-group 'NET-MANAGEMENT'
+          - set firewall name WAN-LOCAL rule 1401 state new 'enable'
 
           - set firewall name LAN-LOCAL default-action 'drop'
 
