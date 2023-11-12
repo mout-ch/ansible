@@ -10,7 +10,7 @@ hvac = "^0.11.2"
 jmespath = "^0.10.0"
 netaddr = "^0.8.0"
 napalm = "^4.1.0"
-napalm-vyos = "^0.2.1"
+napalm-vyos = { git="https://github.com/rootmout/napalm-vyos", branch="develop" }
 ansible = "^8.6.1"
 
 [tool.poetry.dev-dependencies]
