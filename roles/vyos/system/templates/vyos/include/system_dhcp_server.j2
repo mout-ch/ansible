@@ -1,0 +1,33 @@
+service {
+{%- if system_dhcp_server %}
+    dhcp-server {
+    {% for network in system_dhcp_server.networks %}
+        shared-network-name {{ network.name }} {
+        {% for subnet in network.subnets %}
+            subnet {{ subnet.range }} {
+            {% if subnet.default_router is defined %}
+                default-router {{ subnet.default_router }}
+            {% endif %}
+            {% if subnet.domain_name is defined %}
+                domain-name {{ subnet.domain_name }}
+            {% endif %}
+            {% if subnet.lease is defined %}
+                lease {{ subnet.lease }}
+            {% endif %}
+            {% if subnet.name_server is defined %}
+                name-server {{ subnet.name_server }}
+            {% endif %}
+
+            {% for subnet_range in subnet.ranges %}
+                range {{ loop.index - 1 }} {
+                start {{ subnet_range.start }}
+                stop {{ subnet_range.stop }}
+                }
+            {% endfor %}
+            }
+        {% endfor %}
+        }
+    {% endfor %}
+    }
+{%- endif %}
+}

@@ -1,0 +1,6 @@
+---
+- name: "Building configuration from system role"
+  template:
+    dest: "{{baseconfdir.path}}/10_system.out"
+    src: "{{os}}/system.j2"
+  tags: build

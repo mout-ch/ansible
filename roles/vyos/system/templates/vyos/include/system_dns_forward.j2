@@ -1,0 +1,29 @@
+
+service {
+    dns {
+    {% if dns_forwarding is defined %}
+        forwarding {
+            {% set allow_from = dns_forwarding.allow_from | default('0.0.0.0') | ipaddr() %}
+            {% if allow_from != False %}
+                allow-from {{ allow_from }}
+            {% endif %}
+
+            cache-size {{ dns_forwarding.cache_size | default(0) }}
+
+            {% for addr in dns_forwarding.listen_address %}
+                {% set addr = addr | ipaddr() %}
+                {% if addr != False %}
+                    listen-address: {{ addr }}
+                {% endif %}
+            {% endfor %}
+
+            {% for addr in dns_forwarding.name_server %}
+                {% set addr = addr | ipaddr() %}
+                {% if addr != False %}
+                    name-server {{ addr }} {}
+                {% endif %}
+            {% endfor %}
+        }
+    {% endif %}
+    }
+}

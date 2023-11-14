@@ -1,0 +1,33 @@
+service {
+    ssh {
+        disable-host-validation
+        {% if system_ssh_diasble_pass_auth is defined -%} 
+        disable-password-authentication
+        {% endif -%}
+        {% if system_ssh_listen is defined -%}
+        {% set sshaddr = system_ssh_listen  | ipaddr('address') %}
+         {% if sshaddr != False -%}
+        listen-address {{ sshaddr }}
+         {% endif -%}
+        {% endif -%}
+
+        {% if system_ssh_dynamic_protection is defined %}
+            dynamic-protection {
+                detect-time {{ system_ssh_dynamic_protection.detect_time }}
+            }
+        {% endif %}
+        {% if system_ssh_client_keepalive is defined %}
+            client-keepalive-interval {{ system_ssh_client_keepalive }}
+        {% endif %}
+
+        {% if system_ssh_listen_int is defined and  (not system_ssh_listen is defined)-%}
+        {% set sshaddr = system_interfaces[system_ssh_listen_int].address  | ipaddr('address') %}
+         {% if sshaddr != False -%}
+        listen-address  {{ sshaddr }}
+         {% endif -%}
+        {% endif -%}
+
+        port {{ system_ssh_port | default('22') }}
+        loglevel {{ system_ssh_loglevel | default('info') }}
+    }
+}
