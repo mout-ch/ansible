@@ -1,0 +1,6 @@
+---
+- name: "Building configuration from firewall role"
+  template:
+    dest: "{{baseconfdir.path}}/70_firewall.out"
+    src: "{{os}}/firewall.j2"
+  tags: build

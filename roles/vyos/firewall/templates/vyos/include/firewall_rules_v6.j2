@@ -1,0 +1,67 @@
+
+firewall {
+    {% for name, acls in firewall_rules_v6.items() -%}
+    ipv6-name {{ name }} {
+	    {% if acls.default_action is defined -%}
+        default-action {{ acls.default_action }}
+		{% endif -%}
+		{% if acls.description is defined -%}
+        description "{{ acls.description }}"
+		{% endif -%}
+        enable-default-log {{ acls.log | default() }}
+		{% for rule in acls.rules -%}
+        rule {{ loop.index }} {
+            action {{ rule.action }}
+			{% if rule.destination is defined -%}
+            destination {
+			    {% if rule.destination.address is defined -%}
+                    address {{ rule.destination.address }}
+                {% elif rule.destination.port is defined -%}
+                    port {{ rule.destination.port }}
+                {% elif rule.destination.fqdn is defined -%}
+                    fqdn {{ rule.destination.fqdn }}
+                {% endif -%}
+            }
+			{% endif -%}
+
+			{% if rule.protocol is defined -%}
+            protocol {{ rule.protocol}}
+			{% endif -%}
+            log {{ rule.log | default("disable") }}
+
+			{% if rule.protocol is undefined and (( rule.destination_port is defined ) or (rule.source_port is defined))-%}
+            protocol tcp_udp
+			{% endif -%}
+
+        {% if rule.state is defined -%}
+            state {
+          {% for state in rule.state -%}
+                {{ state }} enable
+          {% endfor -%}
+                }
+            {% endif -%}
+
+
+            {% if rule.source is defined -%}
+                source {
+                {% if rule.source.address is defined -%}
+                    address {{ rule.source.address }}
+                {% elif rule.source.port is defined -%}
+                    port {{ rule.source.port }}
+                {% elif rule.source.fqdn is defined -%}
+                    fqdn {{ rule.source.fqdn }}
+                {% elif rule.source.geoip is defined -%}
+                    geoip {
+                        country-code {{ rule.source.geoip.country_code }}
+                        inverse-match {{ rule.source.geoip.inverse_match | default("disable") }}
+                    }
+
+                {% endif -%}
+                }
+            {% endif -%}
+
+        }
+		{% endfor -%}
+    }
+	{% endfor -%}
+}

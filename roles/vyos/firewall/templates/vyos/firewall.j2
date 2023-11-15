@@ -1,0 +1,8 @@
+
+{% if firewall_rules is defined -%}
+  {% include "include/firewall_rules.j2" %}
+{% endif %}
+
+{% if firewall_rules_v6 is defined -%}
+    {% include "include/firewall_rules_v6.j2" %}
+{% endif %}
