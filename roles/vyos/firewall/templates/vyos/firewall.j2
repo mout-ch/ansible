@@ -1,8 +1,16 @@
-
-{% if firewall_rules is defined -%}
-  {% include "include/firewall_rules.j2" %}
-{% endif %}
-
-{% if firewall_rules_v6 is defined -%}
-    {% include "include/firewall_rules_v6.j2" %}
-{% endif %}
+firewall {
+    {% if firewall_rules is defined -%}
+        {% for name, acls in firewall_rules.items() -%}
+            name {{ name }} {
+                {% include "include/firewall_rules.j2" -%}
+            }
+        {% endfor -%}
+    {% endif %}
+    {% if firewall_rules_v6 is defined -%}
+        {% for name, acls in firewall_rules_v6.items() -%}
+            ipv6-name {{ name }} {
+                {% include "include/firewall_rules.j2" -%}
+            }
+        {% endfor -%}
+    {% endif %}
+}
