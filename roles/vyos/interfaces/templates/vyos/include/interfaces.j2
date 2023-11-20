@@ -1,0 +1,177 @@
+{% macro vrrp_config(vrrp_group) %}
+vrrp {
+{% for group in vrrp_group -%}
+  vrrp-group {{group}} {
+{% if vrrp_group[group].authentication is defined and vrrp_group[group].authentication == "true" and vrrp_group[group].authentication_password is defined -%}
+authentication {
+  password {{vrrp_group[group].authentication_password}}
+  type plaintext-password
+}
+{% endif %}
+{% if vrrp_group[group].preempt is defined and vrrp_group[group].preempt == "true" -%}
+preempt true
+preempt-delay {{vrrp_group[group].preempt_delay  | default('30')}}
+{% else %}
+preempt false
+{% endif %}
+    priority {{vrrp_group[group].priority | default('100')}}
+    virtual-address {{vrrp_group[group].virtual_address}}
+{% if ipsec_peers is defined -%}
+    run-transition-scripts {
+      master /config/scripts/vyos_vrrp_transition_master.sh
+      backup /config/scripts/vyos_vrrp_transition_master.sh
+    }
+{% endif %}
+  }
+{% endfor %}
+}
+{% endmacro %}
+{#
+
+#}
+{% macro filter_config(filter) %}
+firewall {
+{% if filter.input is defined -%}
+  in {
+      name {{ filter.input }}
+  }
+{% endif -%}
+{% if filter.output is defined -%}
+  out {
+      name {{ filter.output }}
+  }
+{% endif-%}
+{% if filter.local is defined -%}
+  local {
+      name {{ filter.local }}
+  }
+{% endif-%}
+}
+{% endmacro %}
+
+firewall {
+
+{% for intf in interfaces %}
+{% for unit in interfaces[intf].units %}
+    {% if not (unit==0) %}
+        interface {{ intf }}.{{ uint }} {
+    {% else %}
+        interface {{ intf }} {
+    {% endif %}
+    {% with family = interfaces[intf].units[unit].family['inet'] %}
+        in {
+            {% if family.filter.input is defined %}
+                name {{ family.filter.input }}
+            {% endif %}
+            {% if family.filterv6.input is defined %}
+                ipv6-name {{ family.filterv6.input }}
+            {% endif %}
+        } out {
+            {% if family.filter.output is defined %}
+                name {{ family.filter.output }}
+            {% endif %}
+            {% if family.filterv6.output is defined %}
+                ipv6-name {{ family.filterv6.output }}
+            {% endif %}
+        } local {
+            {% if family.filter.local is defined %}
+                name {{ family.filter.local }}
+            {% endif %}
+            {% if family.filterv6.local is defined %}
+                ipv6-name {{ family.filterv6.local }}
+            {% endif %}
+        }
+        {% endwith %}
+    }
+{% endfor %}
+{% endfor %}
+}
+
+interfaces {
+loopback lo {
+}
+{% for intf in interfaces -%}
+  {{ interfaces[intf].type }} {{ intf }} {
+{#interface address#}
+
+{% if interfaces[intf].hw_id is defined %}
+hw-id {{ interfaces[intf].hw_id }}
+{% endif %}
+mtu {{ interfaces[intf].mtu }}
+{% if interfaces[intf].offload is defined %}
+offload {
+    {% for item in interfaces[intf].offload %}
+    {{ item }}
+    {% endfor %}
+}
+{% endif %}
+
+{% if interfaces[intf].port is defined %}
+    port {{ interfaces[intf].port }}
+{% endif %}
+
+{% if interfaces[intf].peers is defined %}
+{% for peer in interfaces[intf].peers %}
+    peer {{ peer }} {
+        address {{ interfaces[intf].peers[peer].address }}
+        allowed-ips {{ interfaces[intf].peers[peer].allowed_ips }}
+        persistent-keepalive {{ interfaces[intf].peers[peer].persistent_keepalive | default("30") }}
+        port {{ interfaces[intf].peers[peer].port | default("51820") }}
+        public-key {{ interfaces[intf].peers[peer].public_key }}
+    }
+{% endfor %}
+{% endif %}
+
+{% if interfaces[intf].private_key is defined %}
+    private-key {{ interfaces[intf].private_key }}
+{% endif %}
+
+{% if interfaces[intf].units is defined -%}
+{% for unit in interfaces[intf].units -%}
+{% if not (unit==0) -%}
+vif {{unit}} {
+{% endif %}
+{% if interfaces[intf].units[unit].family['inet'] is defined -%}
+{% for address in interfaces[intf].units[unit].family['inet'].address -%}
+{% if True %}
+  address {{address}}
+{% endif %}
+{% if interfaces[intf].units[unit].family['inet'].address[address].vrrp_group is defined -%}
+  {{vrrp_config(interfaces[intf].units[unit].family['inet'].address[address].vrrp_group)}}
+{% endif %}
+{% endfor %}
+{% if interfaces[intf].units[unit].family['inet'].filter is defined -%}
+  {{filter_config(interfaces[intf].units[unit].family['inet'].filter)}}
+{% endif %}
+{% endif %}
+{% if not (unit==0) -%}
+}
+{% endif %}
+{% endfor %}
+{% endif %}
+
+{% if interfaces[intf].description is defined -%}
+  description {{ interfaces[intf].description }}
+{% endif %}
+{% if interfaces[intf].duplex is defined -%}
+  duplex {{ interfaces[intf].duplex }}
+{% endif %}
+{% if interfaces[intf].duplex is defined -%}
+  hw-id {{ interfaces[intf].hw_id }}
+{% endif %}
+{% if interfaces[intf].smp_affinity is defined -%}
+  smp_affinity {{ interfaces[intf].smp_affinity }}
+{% endif %}
+{% if interfaces[intf].speed is defined -%}
+  speed {{ interfaces[intf].speed }}
+{% endif %}
+{% if policy_mss_interface is defined -%}
+{% if policy_mss_interface == intf -%}
+  policy {
+    route mss
+  }
+{% endif %}
+{% endif %}
+}
+{% endfor %}
+}
