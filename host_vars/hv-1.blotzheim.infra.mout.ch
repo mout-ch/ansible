@@ -1,4 +1,5 @@
 ---
+fqdn: hv-1.blotzheim.infra.mout.ch
 
 # GRUB
 # Enable IOMMU to passthrough PCI devices to VMs (eg: a network card)
@@ -417,10 +418,11 @@ kvm_vms:
               dhcp6: false
 
   - name: compute-2
+    uuid: b4b79875-929f-470c-ad8b-e7848931eada
     autostart: true
     state: running
-    memory: 8192
-    vcpu: 4
+    memory: 16384
+    vcpu: 8
     graphics: false
     boot_devices:
       - hd
@@ -429,12 +431,16 @@ kvm_vms:
         name: system
         type: file
         size: 102400
-        backing_file: https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64-disk-kvm.img
+        backing_file: https://cloud-images.ubuntu.com/jammy/20231027/jammy-server-cloudimg-amd64.img
         backing_file_format: qcow2
       - disk_driver: virtio
         name: ceph
         type: block
         path: /dev/disk-13/compute-2-sqlite
+      - disk_driver: virtio
+        name: storj
+        type: block
+        path: /dev/disk-0/compute-2-data
     network_interfaces:
       - source: lan
         network_driver: virtio
