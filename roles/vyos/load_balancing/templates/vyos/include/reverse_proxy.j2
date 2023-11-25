@@ -1,0 +1,32 @@
+load-balancing {
+  reverse-proxy {
+    {% for service in load_balancing.reverse_proxy.services %}
+    service {{ service }} {
+      backend {{ load_balancing.reverse_proxy.services[service].backend }}
+      mode {{ load_balancing.reverse_proxy.services[service].mode }}
+      port {{ load_balancing.reverse_proxy.services[service].port }}
+      {% if load_balancing.reverse_proxy.services[service].redirect_http_to_https is defined %}
+      test {{ load_balancing.reverse_proxy.services[service].redirect_http_to_https }}
+      {% endif %}
+      {% if load_balancing.reverse_proxy.services[service].redirect_http_to_https | default(false) %}
+      redirect-http-to-https
+      {% endif %}
+    }
+    {% endfor %}
+    {% for backend in load_balancing.reverse_proxy.backends %}
+    backend {{ backend }} {
+      balance {{ load_balancing.reverse_proxy.backends[backend].balance }}
+      mode {{ load_balancing.reverse_proxy.backends[backend].mode }}
+      {% for server in load_balancing.reverse_proxy.backends[backend].servers %}
+      server {{ server.name }} {
+        address {{ server.address }}
+        {% if server.check is defined %}
+        check
+        {% endif %}
+        port {{ server.port }}
+        }
+      {% endfor %}
+    }
+    {% endfor %}
+  }
+}

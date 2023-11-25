@@ -94,6 +94,31 @@ loopback lo {
   {{ interfaces[intf].type }} {{ intf }} {
 {#interface address#}
 
+{% if interfaces[intf].ipv6 is defined %}
+ipv6 {
+    address {
+        {{ interfaces[intf].ipv6.address }}
+    }
+    dup-addr-detect-transmits
+}
+{% endif %}
+
+{% if interfaces[intf].dhcpv6 is defined %}
+dhcpv6-options {
+    {% for pd in interfaces[intf].dhcpv6.pd %}
+        pd {{ pd }} {
+            length {{ interfaces[intf].dhcpv6.pd[pd].length }}
+            {% for pd_intf in interfaces[intf].dhcpv6.pd[pd].interfaces %}
+                interface {{ pd_intf }} {
+                    address {{ interfaces[intf].dhcpv6.pd[pd].interfaces[pd_intf].address }}
+                    sla-id {{ interfaces[intf].dhcpv6.pd[pd].interfaces[pd_intf].sla_id }}
+                }
+            {% endfor %}
+        }
+    {% endfor %}
+}
+{% endif %}
+
 {% if interfaces[intf].hw_id is defined %}
 hw-id {{ interfaces[intf].hw_id }}
 {% endif %}

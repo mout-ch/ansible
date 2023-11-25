@@ -1,0 +1,6 @@
+---
+- name: "Building configuration from load-balancing role"
+  template:
+    dest: "{{baseconfdir.path}}/80_load_balancing.out"
+    src: "{{os}}/load_balancing.j2"
+  tags: build
