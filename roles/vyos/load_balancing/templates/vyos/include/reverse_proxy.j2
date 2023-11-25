@@ -5,9 +5,6 @@ load-balancing {
       backend {{ load_balancing.reverse_proxy.services[service].backend }}
       mode {{ load_balancing.reverse_proxy.services[service].mode }}
       port {{ load_balancing.reverse_proxy.services[service].port }}
-      {% if load_balancing.reverse_proxy.services[service].redirect_http_to_https is defined %}
-      test {{ load_balancing.reverse_proxy.services[service].redirect_http_to_https }}
-      {% endif %}
       {% if load_balancing.reverse_proxy.services[service].redirect_http_to_https | default(false) %}
       redirect-http-to-https
       {% endif %}
