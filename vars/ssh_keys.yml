@@ -1,4 +1,6 @@
 ---
 
 ssh_key_rootmout:
-  - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICvso1QjsOLrWyVoqkqQjre0TD6LE9djVWTCvkUDjgoe rootmout@yubikey
+  name: rootmout@yubikey
+  type: ssh-ed25519
+  key: AAAAC3NzaC1lZDI1NTE5AAAAICvso1QjsOLrWyVoqkqQjre0TD6LE9djVWTCvkUDjgoe

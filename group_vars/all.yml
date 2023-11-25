@@ -9,8 +9,9 @@ bpf_tools_install: true
 
 mail_server: mail.mout.ch
 
+# Require to import ../vars/ssh_keys.yml as vars_files in the playbook needing the secret
 ssh_authorized_keys:
-  - "{{ ssh_key_rootmout }}"
+  - "{{ ssh_key_rootmout.type }} {{ ssh_key_rootmout.key }} {{ ssh_key_rootmout.name }}"
 
 
 loki_username: "none"  # yamllint disable-line rule:line-length
