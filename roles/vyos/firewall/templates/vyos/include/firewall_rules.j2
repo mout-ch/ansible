@@ -46,6 +46,12 @@
         }
     {% endif -%}
 
+    {% if rule.recent is defined %}
+        recent {
+            count {{ rule.recent.count }}
+            time {{ rule.recent.time }}
+        }
+    {% endif %}
 
     {% if rule.source is defined -%}
         source {
