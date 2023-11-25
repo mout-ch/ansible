@@ -40,16 +40,6 @@
   roles:
     - prometheus.prometheus.node_exporter
 
-#- hosts: consul
-#  tags: consul
-#  roles:
-#    - ansible-consul
-#
-#- hosts: consul
-#  tags: dns
-#  roles:
-#    - dns
-
 - hosts: vault
   roles:
     - ansible-community.ansible-vault
