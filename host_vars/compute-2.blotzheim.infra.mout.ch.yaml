@@ -26,6 +26,4 @@ k3s_server_manifests_templates:
   - ../files/k3s/cilium.yaml.j2
   - ../files/k3s/argocd.yaml.j2
   - ../files/k3s/root.yaml.j2
-k3s_server:
-  flannel-backend: none
-  disable-network-policy: true
+  - ../files/k3s/traefik.yaml.j2
