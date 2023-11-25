@@ -1,387 +1,135 @@
 ---
-- name: configure interfaces
+# This role is strongly inspired from the ansible-vyos project
+# See https://github.com/DreamLab/ansible-vyos
+- name: Prepare dirs
+  hosts: vyos
+  gather_facts: no
+  connection: local
+
+  tasks:
+    - name: Remove old compiled config
+      file:
+        path: "{{ playbook_dir }}/compiled/{{ inventory_hostname }}"
+        state: absent
+      register: baseconfdir
+      tags: build
+      changed_when: False
+
+    - name: Create empty compiled directory
+      file:
+        path: "{{ playbook_dir }}/compiled/{{ inventory_hostname }}"
+        state: directory
+      tags: build
+      changed_when: False
+
+    - name: Remove old log directory
+      file:
+        path: "{{ playbook_dir }}/logs/{{ inventory_hostname }}"
+        state: absent
+      register: baselogdir
+      tags: build
+      changed_when: False
+
+    - name: Create empty log dir
+      file:
+        path: "{{ playbook_dir }}/logs/{{ inventory_hostname }}"
+        state: directory
+      tags: build
+      changed_when: False
+
+    - name: Static configs directory
+      file:
+        path: "{{ playbook_dir }}/staticfiles"
+        state: directory
+      register: basestaticdir
+      tags: build
+      changed_when: False
+
+    - name: Create empty diff directory
+      file:
+        path: "{{ playbook_dir }}/diff"
+        state: directory
+      tags: build
+      changed_when: False
+      when: ansible_diff_mode | bool
+
+
+- name: Generate configs for vyos
+  hosts: vyos
+  gather_facts: no
+  connection: local
+  tags: build
+  vars_files:
+    - ../vars/ssh_keys.yml
+
+  roles:
+    - vyos/system
+    - vyos/nat
+    - vyos/firewall
+    - vyos/interfaces
+    - vyos/load_balancing
+
+
+- name: Assemble and Generate configuration
+  hosts: vyos
+  connection: local
+  gather_facts: no
+  tags: compile
+
+  tasks:
+    - name: Assemble configuration
+      assemble:
+        src: "{{ playbook_dir }}/compiled/{{ inventory_hostname }}"
+        dest: "{{ playbook_dir }}/compiled/{{ inventory_hostname }}/running.conf"
+      changed_when: False
+
+
+- name: Check version of VyOS
+  hosts: vyos
+  gather_facts: no
+  tags: build
+
+  tasks:
+    - name: Check if FRR directory exists.
+      stat:
+        path: /etc/frr/
+      register: vyos_frr_daemon
+
+
+- name: Sent configuration to the device
   hosts: vyos
   connection: network_cli
+
   tasks:
-
-    - name: enable SSH
-      vyos.vyos.vyos_config:
-        lines:
-          - set service ssh port '22'
-          - set service ssh disable-password-authentication
-          - set service ssh loglevel info
-          - set service ssh dynamic-protection
-          - set service ssh dynamic-protection detect-time 3600
-
-    - name: configure interfaces L2 settings
-      vyos.vyos.vyos_config:
-        lines:
-          - set interfaces ethernet {{ item.name }} hw-id '{{ item.mac }}'
-          - set interfaces ethernet {{ item.name }} description '{{ item.description }}'
-          - set interfaces ethernet {{ item.name }} mtu '{{ item.mtu }}'
-      loop: "{{ vyos_interfaces }}"
-
-    - name: configure interfaces L3 settings
-      vyos.vyos.vyos_l3_interfaces:
-        config:
-        - name: "{{ item.name }}"
-          ipv4:
-          - address: "{{ item.addresse }}"
-        state: merged
-      loop: "{{ vyos_interfaces }}"
-
-    - name: configure DHCP for public network
-      vyos.vyos.vyos_config:
-        lines:
-          - set service dhcp-server shared-network-name 'public' subnet 192.168.2.0/24 default-router '192.168.2.1'
-          - set service dhcp-server shared-network-name 'public' subnet 192.168.2.0/24 name-server '192.168.2.1'
-          - set service dhcp-server shared-network-name 'public' subnet 192.168.2.0/24 domain-name 'public-network'
-          - set service dhcp-server shared-network-name 'public' subnet 192.168.2.0/24 lease '86400'
-          - set service dhcp-server shared-network-name 'public' subnet 192.168.2.0/24 range 0 start '192.168.2.100'
-          - set service dhcp-server shared-network-name 'public' subnet 192.168.2.0/24 range 0 stop '192.168.2.254'
-
-    - name: configure source NAT for LAN & public network
-      vyos.vyos.vyos_config:
-        lines:
-          - set nat source rule 100 outbound-interface 'eth0'
-          - set nat source rule 100 source address '192.168.2.0/24'   # public
-          - set nat source rule 100 translation address masquerade
-          - set nat source rule 200 outbound-interface 'eth0'
-          - set nat source rule 200 source address '192.168.14.0/24'  # lan
-          - set nat source rule 200 translation address masquerade
-
-    - name: configure DNS
-      vyos.vyos.vyos_config:
-        lines:
-          - set service dns forwarding cache-size '0'
-          - set service dns forwarding allow-from '192.168.0.0/16'
-          - set service dns forwarding listen-address '192.168.2.1'
-          - set service dns forwarding listen-address '192.168.13.1'
-          - set service dns forwarding listen-address '192.168.14.1'
-          - set service dns forwarding listen-address '192.168.15.1'
-          - set service dns forwarding name-server '8.8.8.8'
-          - set service dns forwarding name-server '8.8.4.4'
-
-    - name: configure reverse proxy
-      tags: reverse-proxy
-      vyos.vyos.vyos_config:
-        lines:
-          - set load-balancing reverse-proxy service http mode 'tcp'
-          - set load-balancing reverse-proxy service http port '80'
-          - set load-balancing reverse-proxy service http backend 'k3s-http'
-          - set load-balancing reverse-proxy backend k3s-http mode 'tcp'
-          - set load-balancing reverse-proxy backend k3s-http balance 'source-address'
-          - set load-balancing reverse-proxy backend k3s-http server compute-2 address '192.168.13.11'
-          - set load-balancing reverse-proxy backend k3s-http server compute-2 port '80'
-          - set load-balancing reverse-proxy backend k3s-http server compute-2 check
-
-          - set load-balancing reverse-proxy service https mode 'tcp'
-          - set load-balancing reverse-proxy service https port '443'
-          - set load-balancing reverse-proxy service https backend 'k3s-https'
-          - set load-balancing reverse-proxy backend k3s-https mode 'tcp'
-          - set load-balancing reverse-proxy backend k3s-https balance 'source-address'
-          - set load-balancing reverse-proxy backend k3s-https server compute-2 address '192.168.13.11'
-          - set load-balancing reverse-proxy backend k3s-https server compute-2 port '443'
-          - set load-balancing reverse-proxy backend k3s-https server compute-2 check
-
-          - set load-balancing reverse-proxy service minecraft mode 'tcp'
-          - set load-balancing reverse-proxy service minecraft port '25565'
-          - set load-balancing reverse-proxy service minecraft backend 'minecraft-tcp'
-          - set load-balancing reverse-proxy backend minecraft-tcp mode 'tcp'
-          - set load-balancing reverse-proxy backend minecraft-tcp balance 'source-address'
-          - set load-balancing reverse-proxy backend minecraft-tcp server compute-2 address '192.168.13.11'
-          - set load-balancing reverse-proxy backend minecraft-tcp server compute-2 port '30573'
-          - set load-balancing reverse-proxy backend minecraft-tcp server compute-2 check
-
-          - set load-balancing reverse-proxy service minecraft-2 mode 'tcp'
-          - set load-balancing reverse-proxy service minecraft-2 port '25566'
-          - set load-balancing reverse-proxy service minecraft-2 backend 'minecraft-2-tcp'
-          - set load-balancing reverse-proxy backend minecraft-2-tcp mode 'tcp'
-          - set load-balancing reverse-proxy backend minecraft-2-tcp balance 'source-address'
-          - set load-balancing reverse-proxy backend minecraft-2-tcp server compute-2 address '192.168.13.11'
-          - set load-balancing reverse-proxy backend minecraft-2-tcp server compute-2 port '30574'
-          - set load-balancing reverse-proxy backend minecraft-2-tcp server compute-2 check
-
-          - set load-balancing reverse-proxy service minecraft-3 mode 'tcp'
-          - set load-balancing reverse-proxy service minecraft-3 port '25567'
-          - set load-balancing reverse-proxy service minecraft-3 backend 'minecraft-3-tcp'
-          - set load-balancing reverse-proxy backend minecraft-3-tcp mode 'tcp'
-          - set load-balancing reverse-proxy backend minecraft-3-tcp balance 'source-address'
-          - set load-balancing reverse-proxy backend minecraft-3-tcp server compute-2 address '192.168.13.11'
-          - set load-balancing reverse-proxy backend minecraft-3-tcp server compute-2 port '30575'
-          - set load-balancing reverse-proxy backend minecraft-3-tcp server compute-2 check
-
-          - set load-balancing reverse-proxy service kubectl mode 'tcp'
-          - set load-balancing reverse-proxy service kubectl port '6443'
-          - set load-balancing reverse-proxy service kubectl backend 'k3s-api'
-          - set load-balancing reverse-proxy backend k3s-api mode 'tcp'
-          - set load-balancing reverse-proxy backend k3s-api balance 'source-address'
-          - set load-balancing reverse-proxy backend k3s-api server compute-2 address '192.168.13.11'
-          - set load-balancing reverse-proxy backend k3s-api server compute-2 port '6443'
-          - set load-balancing reverse-proxy backend k3s-api server compute-2 check
-
-    - name: create group objects
-      tags: fw
-      vyos.vyos.vyos_config:
-        lines:
-          - set firewall group network-group NET-WAN network '192.168.1.0/24'
-          - set firewall group network-group NET-PUBLIC network '192.168.2.0/24'
-          - set firewall group network-group NET-DMZ network '192.168.13.0/24'
-          - set firewall group network-group NET-LAN network '192.168.14.0/24'
-          - set firewall group network-group NET-CEPH network '192.168.15.0/24'
-          - set firewall group network-group NET-MANAGEMENT network '192.168.1.1/32'
-          - set firewall group network-group NET-MANAGEMENT network '192.168.1.100/32'
-
-          - set firewall name WAN-LOCAL default-action 'drop'
-
-          - set firewall name WAN-LOCAL rule 1010 action 'accept'
-          - set firewall name WAN-LOCAL rule 1010 state established 'enable'
-          - set firewall name WAN-LOCAL rule 1010 state related 'enable'
-
-          - set firewall name WAN-LOCAL rule 1011 action 'drop'
-          - set firewall name WAN-LOCAL rule 1011 state invalid 'enable'
-
-          - set firewall name WAN-LOCAL rule 1020 action 'accept'
-          - set firewall name WAN-LOCAL rule 1020 icmp type-name 'echo-request'
-          - set firewall name WAN-LOCAL rule 1020 protocol 'icmp'
-          - set firewall name WAN-LOCAL rule 1020 state new 'enable'
-
-          # - set firewall name WAN-LOCAL rule 1110 action 'accept'
-          # - set firewall name WAN-LOCAL rule 1110 destination port '161'
-          # - set firewall name WAN-LOCAL rule 1110 protocol 'udp'
-          # - set firewall name WAN-LOCAL rule 1110 source group network-group 'NET-MANAGEMENT'
-          # - set firewall name WAN-LOCAL rule 1110 state new 'enable'
-
-          - set firewall name WAN-LOCAL rule 1100 action 'drop'
-          - set firewall name WAN-LOCAL rule 1100 destination port '22'
-          - set firewall name WAN-LOCAL rule 1100 protocol 'tcp'
-          - set firewall name WAN-LOCAL rule 1100 recent count '4'
-          - set firewall name WAN-LOCAL rule 1100 recent time 'minute'
-          # - set firewall name WAN-LOCAL rule 1100 source group network-group 'NET-MANAGEMENT'
-          - set firewall name WAN-LOCAL rule 1100 state new 'enable'
-
-          - set firewall name WAN-LOCAL rule 1101 action 'accept'
-          - set firewall name WAN-LOCAL rule 1101 destination port '22'
-          - set firewall name WAN-LOCAL rule 1101 protocol 'tcp'
-          # - set firewall name WAN-LOCAL rule 1101 source group network-group 'NET-MANAGEMENT'
-          - set firewall name WAN-LOCAL rule 1101 state new 'enable'
-
-          - set firewall name WAN-LOCAL rule 1200 action 'drop'
-          - set firewall name WAN-LOCAL rule 1200 destination port '80'
-          - set firewall name WAN-LOCAL rule 1200 protocol 'tcp'
-          - set firewall name WAN-LOCAL rule 1200 recent count '10'
-          - set firewall name WAN-LOCAL rule 1200 recent time 'minute'
-          # - set firewall name WAN-LOCAL rule 1200 source group network-group 'NET-MANAGEMENT'
-          - set firewall name WAN-LOCAL rule 1200 state new 'enable'
-
-          - set firewall name WAN-LOCAL rule 1201 action 'accept'
-          - set firewall name WAN-LOCAL rule 1201 destination port '80'
-          - set firewall name WAN-LOCAL rule 1201 protocol 'tcp'
-          # - set firewall name WAN-LOCAL rule 1201 source group network-group 'NET-MANAGEMENT'
-          - set firewall name WAN-LOCAL rule 1201 state new 'enable'
-
-          - set firewall name WAN-LOCAL rule 1300 action 'drop'
-          - set firewall name WAN-LOCAL rule 1300 destination port '443'
-          - set firewall name WAN-LOCAL rule 1300 protocol 'tcp'
-          - set firewall name WAN-LOCAL rule 1300 recent count '10'
-          - set firewall name WAN-LOCAL rule 1300 recent time 'minute'
-          # - set firewall name WAN-LOCAL rule 1300 source group network-group 'NET-MANAGEMENT'
-          - set firewall name WAN-LOCAL rule 1300 state new 'enable'
-
-          - set firewall name WAN-LOCAL rule 1301 action 'accept'
-          - set firewall name WAN-LOCAL rule 1301 destination port '443'
-          - set firewall name WAN-LOCAL rule 1301 protocol 'tcp'
-          # - set firewall name WAN-LOCAL rule 1301 source group network-group 'NET-MANAGEMENT'
-          - set firewall name WAN-LOCAL rule 1301 state new 'enable'
-
-          - set firewall name WAN-LOCAL rule 1400 action 'drop'
-          - set firewall name WAN-LOCAL rule 1400 destination port '6443'
-          - set firewall name WAN-LOCAL rule 1400 protocol 'tcp'
-          - set firewall name WAN-LOCAL rule 1400 recent count '4'
-          - set firewall name WAN-LOCAL rule 1400 recent time 'minute'
-          # - set firewall name WAN-LOCAL rule 1400 source group network-group 'NET-MANAGEMENT'
-          - set firewall name WAN-LOCAL rule 1400 state new 'enable'
-
-          - set firewall name WAN-LOCAL rule 1401 action 'accept'
-          - set firewall name WAN-LOCAL rule 1401 destination port '6443'
-          - set firewall name WAN-LOCAL rule 1401 protocol 'tcp'
-          # - set firewall name WAN-LOCAL rule 1401 source group network-group 'NET-MANAGEMENT'
-          - set firewall name WAN-LOCAL rule 1401 state new 'enable'
-            
-          # Minecraft
-          - set firewall name WAN-LOCAL rule 1500 action 'drop'
-          - set firewall name WAN-LOCAL rule 1500 destination port '25565'
-          - set firewall name WAN-LOCAL rule 1500 protocol 'tcp'
-          - set firewall name WAN-LOCAL rule 1500 recent count '4'
-          - set firewall name WAN-LOCAL rule 1500 recent time 'minute'
-          # - set firewall name WAN-LOCAL rule 1500 source group network-group 'NET-MANAGEMENT'
-          - set firewall name WAN-LOCAL rule 1500 state new 'enable'
-
-          - set firewall name WAN-LOCAL rule 1501 action 'accept'
-          - set firewall name WAN-LOCAL rule 1501 destination port '25565'
-          - set firewall name WAN-LOCAL rule 1501 protocol 'tcp'
-          # - set firewall name WAN-LOCAL rule 1501 source group network-group 'NET-MANAGEMENT'
-          - set firewall name WAN-LOCAL rule 1501 state new 'enable'
-
-          # Minecraft 2
-          - set firewall name WAN-LOCAL rule 1600 action 'drop'
-          - set firewall name WAN-LOCAL rule 1600 destination port '25566'
-          - set firewall name WAN-LOCAL rule 1600 protocol 'tcp'
-          - set firewall name WAN-LOCAL rule 1600 recent count '4'
-          - set firewall name WAN-LOCAL rule 1600 recent time 'minute'
-          # - set firewall name WAN-LOCAL rule 1600 source group network-group 'NET-MANAGEMENT'
-          - set firewall name WAN-LOCAL rule 1600 state new 'enable'
-
-          - set firewall name WAN-LOCAL rule 1601 action 'accept'
-          - set firewall name WAN-LOCAL rule 1601 destination port '25566'
-          - set firewall name WAN-LOCAL rule 1601 protocol 'tcp'
-          # - set firewall name WAN-LOCAL rule 1601 source group network-group 'NET-MANAGEMENT'
-          - set firewall name WAN-LOCAL rule 1601 state new 'enable'
-            
-          # Minecraft 3
-          - set firewall name WAN-LOCAL rule 1700 action 'drop'
-          - set firewall name WAN-LOCAL rule 1700 destination port '25567'
-          - set firewall name WAN-LOCAL rule 1700 protocol 'tcp'
-          - set firewall name WAN-LOCAL rule 1700 recent count '4'
-          - set firewall name WAN-LOCAL rule 1700 recent time 'minute'
-          # - set firewall name WAN-LOCAL rule 1700 source group network-group 'NET-MANAGEMENT'
-          - set firewall name WAN-LOCAL rule 1700 state new 'enable'
-
-          - set firewall name WAN-LOCAL rule 1701 action 'accept'
-          - set firewall name WAN-LOCAL rule 1701 destination port '25567'
-          - set firewall name WAN-LOCAL rule 1701 protocol 'tcp'
-          # - set firewall name WAN-LOCAL rule 1701 source group network-group 'NET-MANAGEMENT'
-          - set firewall name WAN-LOCAL rule 1701 state new 'enable'
+    - name: Load Config, Diff ({{ ansible_diff_mode }}), Commit ({{ ansible_check_mode }})
+      napalm.napalm.napalm_install_config:
+        dev_os: 'vyos'
+        config_file: "compiled/{{inventory_hostname}}/running.conf"
+        commit_changes: "{{ not ansible_check_mode | bool }}"
+        replace_config: true
+        get_diffs: "{{ ansible_diff_mode | bool }}"
+        diff_file: "{{ playbook_dir }}/diff/{{inventory_hostname}}.diff"
+        hostname: "{{ inventory_hostname }}"
+        username: "vyos"
+        optional_args:
+          verbose: true
+          allow_agent: true
+      delegate_to: localhost
 
 
-          - set firewall name WAN-LOCAL rule 1810 action accept
-          - set firewall name WAN-LOCAL rule 1810 description 'Allow established/related'
-          - set firewall name WAN-LOCAL rule 1810 state established enable
-          - set firewall name WAN-LOCAL rule 1810 state related enable
-          - set firewall name WAN-LOCAL rule 1820 action accept
-          - set firewall name WAN-LOCAL rule 1820 description WireGuard_IN
-          - set firewall name WAN-LOCAL rule 1820 destination port 51820
-          - set firewall name WAN-LOCAL rule 1820 log enable
-          - set firewall name WAN-LOCAL rule 1820 protocol udp
-          - set firewall name WAN-LOCAL rule 1820 source
+# This step is important to be sure that the secrets, gathered by the vault
+# lookup plugin, stay not on the machine.
+# TODO: make the cleanup always run, even if the playbook fails
+- name: Cleanup generated config
+  hosts: vyos
+  gather_facts: no
+  connection: local
 
-          - set firewall name LAN-LOCAL default-action 'drop'
-
-          - set firewall name LAN-LOCAL rule 1010 action 'accept'
-          - set firewall name LAN-LOCAL rule 1010 state established 'enable'
-          - set firewall name LAN-LOCAL rule 1010 state related 'enable'
-
-          - set firewall name LAN-LOCAL rule 1011 action 'drop'
-          - set firewall name LAN-LOCAL rule 1011 state invalid 'enable'
-
-          - set firewall name LAN-LOCAL rule 1020 action 'accept'
-          - set firewall name LAN-LOCAL rule 1020 icmp type-name 'echo-request'
-          - set firewall name LAN-LOCAL rule 1020 protocol 'icmp'
-          - set firewall name LAN-LOCAL rule 1020 state new 'enable'
-
-          - set firewall name LAN-LOCAL rule 1030 action 'accept'
-          - set firewall name LAN-LOCAL rule 1030 destination port '67'
-          - set firewall name LAN-LOCAL rule 1030 protocol 'udp'
-          - set firewall name LAN-LOCAL rule 1030 state new 'enable'
-
-          - set firewall name LAN-LOCAL rule 1040 action 'accept'
-          - set firewall name LAN-LOCAL rule 1040 destination port '53'
-          - set firewall name LAN-LOCAL rule 1040 protocol 'tcp_udp'
-          - set firewall name LAN-LOCAL rule 1040 state new 'enable'
-
-          # let lan reach the k3s
-          - set firewall name LAN-LOCAL rule 1050 action 'accept'
-          - set firewall name LAN-LOCAL rule 1050 destination port '443'
-          - set firewall name LAN-LOCAL rule 1050 protocol 'tcp'
-          - set firewall name LAN-LOCAL rule 1050 state new 'enable'
-
-          - set firewall name LAN-LOCAL rule 1060 action 'accept'
-          - set firewall name LAN-LOCAL rule 1060 destination port '80'
-          - set firewall name LAN-LOCAL rule 1060 protocol 'tcp'
-          - set firewall name LAN-LOCAL rule 1060 state new 'enable'
-
-          # - set firewall name LAN-LOCAL rule 1100 action 'drop'
-          # - set firewall name LAN-LOCAL rule 1100 destination port '22'
-          # - set firewall name LAN-LOCAL rule 1100 protocol 'tcp'
-          # - set firewall name LAN-LOCAL rule 1100 recent count '4'
-          # - set firewall name LAN-LOCAL rule 1100 recent time 'minute'
-          # - set firewall name LAN-LOCAL rule 1100 source group network-group 'NET-MANAGEMENT'
-          # - set firewall name LAN-LOCAL rule 1100 state new 'enable'
-
-          # - set firewall name LAN-LOCAL rule 1101 action 'accept'
-          # - set firewall name LAN-LOCAL rule 1101 destination port '22'
-          # - set firewall name LAN-LOCAL rule 1101 protocol 'tcp'
-          # - set firewall name LAN-LOCAL rule 1101 source group network-group 'NET-MANAGEMENT'
-          # - set firewall name LAN-LOCAL rule 1101 state new 'enable'
-
-          # - set firewall name LAN-LOCAL rule 1110 action 'accept'
-          # - set firewall name LAN-LOCAL rule 1110 destination port '161'
-          # - set firewall name LAN-LOCAL rule 1110 protocol 'udp'
-          # - set firewall name LAN-LOCAL rule 1110 source group network-group 'NET-MANAGEMENT'
-          # - set firewall name LAN-LOCAL rule 1110 state new 'enable'
-
-
-          - set firewall interface eth0 local name 'WAN-LOCAL'
-          # - set interfaces ethernet eth1 firewall local name 'DMZ-LOCAL'
-          - set firewall interface eth3 local name 'LAN-LOCAL'
-
-
-          - set firewall name LAN-OUT default-action 'drop'
-
-          - set firewall name LAN-OUT rule 1010 action 'accept'
-          - set firewall name LAN-OUT rule 1010 state established 'enable'
-          - set firewall name LAN-OUT rule 1010 state related 'enable'
-
-          - set firewall name LAN-OUT rule 1011 action 'drop'
-          - set firewall name LAN-OUT rule 1011 state invalid 'enable'
-
-          - set firewall name LAN-OUT rule 1020 action 'accept'
-          - set firewall name LAN-OUT rule 1020 icmp type-name 'echo-request'
-          - set firewall name LAN-OUT rule 1020 protocol 'icmp'
-          - set firewall name LAN-OUT rule 1020 state new 'enable'
-
-          - set firewall interface eth3 out name 'LAN-OUT'
-
-
-    - name: ipv6 settings
-      tags: ipv6
-      vyos.vyos.vyos_config:
-        lines:
-          - set interfaces ethernet eth0 address 'dhcpv6'
-          - set interfaces ethernet eth0 dhcpv6-options pd 0 interface eth1 address '1'
-          - set interfaces ethernet eth0 dhcpv6-options pd 0 interface eth1 sla-id '0'
-          - set interfaces ethernet eth0 dhcpv6-options pd 0 interface eth2 address '1'
-          - set interfaces ethernet eth0 dhcpv6-options pd 0 interface eth2 sla-id '1'
-          - set interfaces ethernet eth0 dhcpv6-options pd 0 length '48'
-          - set firewall interface eth0 in ipv6-name 'IPV6WAN_IN'
-          - set firewall interface eth0 local ipv6-name 'IPV6WAN_LOCAL'
-          - set interfaces ethernet eth0 ipv6 address autoconf
-          - set interfaces ethernet eth0 ipv6 dup-addr-detect-transmits '1'
-
-          - set firewall ipv6-name IPV6WAN_LOCAL default-action 'drop'
-          - set firewall ipv6-name IPV6WAN_LOCAL description 'IPv6 WAN LOCAL'
-          - set firewall ipv6-name IPV6WAN_LOCAL enable-default-log
-          - set firewall ipv6-name IPV6WAN_LOCAL rule 30 action 'accept'
-          - set firewall ipv6-name IPV6WAN_LOCAL rule 30 description 'Allow ICMPv6 packets'
-          - set firewall ipv6-name IPV6WAN_LOCAL rule 30 log 'enable'
-          - set firewall ipv6-name IPV6WAN_LOCAL rule 30 protocol 'icmpv6'
-          - set firewall ipv6-name IPV6WAN_LOCAL rule 40 action 'accept'
-          - set firewall ipv6-name IPV6WAN_LOCAL rule 40 description 'allow dhcpv6'
-          - set firewall ipv6-name IPV6WAN_LOCAL rule 40 destination port '546'
-          - set firewall ipv6-name IPV6WAN_LOCAL rule 40 log 'enable'
-          - set firewall ipv6-name IPV6WAN_LOCAL rule 40 protocol 'udp'
-          - set firewall ipv6-name IPV6WAN_LOCAL rule 40 source port '547'
-
-          - set firewall ipv6-name IPV6WAN_IN default-action 'drop'
-          - set firewall ipv6-name IPV6WAN_IN description 'IPv6 WAN IN'
-          - set firewall ipv6-name IPV6WAN_IN enable-default-log
-          - set firewall ipv6-name IPV6WAN_IN rule 30 action 'accept'
-          - set firewall ipv6-name IPV6WAN_IN rule 30 description 'Allow ICMPv6 packets'
-          - set firewall ipv6-name IPV6WAN_IN rule 30 log 'enable'
-          - set firewall ipv6-name IPV6WAN_IN rule 30 protocol 'icmpv6'
-          - set firewall ipv6-name IPV6WAN_IN rule 40 action 'accept'
-          - set firewall ipv6-name IPV6WAN_IN rule 40 description 'allow dhcpv6'
-          - set firewall ipv6-name IPV6WAN_IN rule 40 destination port '546'
-          - set firewall ipv6-name IPV6WAN_IN rule 40 log 'enable'
-          - set firewall ipv6-name IPV6WAN_IN rule 40 protocol 'udp'
-          - set firewall ipv6-name IPV6WAN_IN rule 40 source port '547'
+  tasks:
+    - name: Remove config
+      file:
+        path: "{{ playbook_dir }}/compiled/{{ inventory_hostname }}"
+        state: absent
+      register: baseconfdir
+      tags: build
+      changed_when: False

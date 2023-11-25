@@ -1,0 +1,464 @@
+---
+
+os: vyos
+
+# System
+system_hostname: gate
+system_timezone: "Europe/Paris"
+
+system_accounts:
+  - login: vyos
+    encryptedpass: "{{ root_password_hashed }}"
+    fullname: "Vyos account"
+    publickeys:
+      - keyname: "{{ ssh_key_rootmout.name }}"
+        key: "{{ ssh_key_rootmout.key }}"
+        keytype: "{{ ssh_key_rootmout.type }}"
+
+system_ntp:
+  - address: 0.fr.pool.ntp.org
+  - address: 1.fr.pool.ntp.org
+  - address: 2.fr.pool.ntp.org
+  - address: 3.fr.pool.ntp.org
+
+system_ssh_listen: "0.0.0.0"
+system_ssh_listen_int: "eth0"
+
+system_ssh_dynamic_protection:
+  detect_time: 3600
+
+system_ssh_client_keepalive: 180
+
+system_ssh_diasble_pass_auth: true
+
+system_dns:
+  - "1.1.1.1"
+  - "8.8.8.8"
+
+dns_forwarding:
+  allow_from: "192.168.0.0/16"
+  listen_address:
+    - 192.168.2.1
+    - 192.168.13.1
+    - 192.168.14.1
+    - 192.168.15.1
+  name_server:
+    - 8.8.8.8
+    - 8.8.4.4
+
+system_dhcp_server:
+  networks:
+    - name: public
+      subnets:
+        - range: 192.168.2.0/24
+          default_router: 192.168.2.1
+          domain_name: public-network
+          lease: 86400
+          name_server: 192.168.2.1
+          ranges:
+            - start: 192.168.2.100
+              stop: 192.168.2.254
+
+# NAT
+nat_source_rules:
+  - description: "DMZ-OUT"
+    source_address: "192.168.14.0/24"
+    outbound_interface: "eth0"
+    translation_address: "masquerade"
+  - description: "PUBLIC-OUT"
+    source_address: "192.168.2.0/24"
+    outbound_interface: "eth0"
+    translation_address: "masquerade"
+
+# Firewall
+firewall_rules:
+  "LAN_LOCAL":
+    default_action: "drop"
+    rules:
+      - name: "accept_established"
+        action: accept
+        state: [ "established", "related" ]
+      - name: "respond_to_ping"
+        icmp:
+          type_name: "echo-request"
+        protocol: icmp
+        state: [ "new" ]
+        action: accept
+
+      - name: "drop_malformed_packed"
+        action: drop
+        state: ["invalid"]
+      - name: "drop_spam"
+        recent:
+          count: 5
+          time: "minute"
+        state: [ "new" ]
+        action: drop
+
+      - name: "accept_dhcp"
+        action: accept
+        destination:
+          port: 67
+        protocol: udp
+        state: ["new"]
+      - name: "accept_dns"
+        destination:
+          port: 53
+        protocol: tcp_udp
+        state: ["new"]
+        action: accept
+      - name: "accept_ssh"
+        destination:
+          port: 22
+        protocol: tcp
+        state: ["new"]
+        action: accept
+      - name: "accept_http"
+        destination:
+          port: 80
+        protocol: tcp
+        state: ["new"]
+        action: accept
+      - name: "accept_https"
+        destination:
+          port: 443
+        protocol: tcp
+        state: [ "new" ]
+        action: accept
+
+  "LAN_OUT":
+    default_action: drop
+    rules:
+      - name: "accept_established"
+        action: accept
+        state: ["established", "related"]
+      - name: "reject_malformed_packed"
+        action: drop
+        state: ["invalid"]
+      - name: "respond_to_ping"
+        icmp:
+          type_name: "echo-request"
+        protocol: icmp
+        state: [ "new" ]
+        action: accept
+
+  # country code list https://www.iban.com/country-codes
+  # value have to be lowercase.
+  "WAN_LOCAL":
+    default_action: drop
+    rules:
+      - name: "accept_established"
+        action: accept
+        state: [ "established", "related" ]
+      - name: "respond_to_ping"
+        icmp:
+          type_name: "echo-request"
+        protocol: icmp
+        state: [ "new" ]
+        action: accept
+
+      - name: "drop_malformed_packed"
+        action: drop
+        state: [ "invalid" ]
+      - name: "drop_spam"
+        recent:
+          count: 10
+          time: "minute"
+        state: ["new"]
+        action: drop
+
+      - name: "accept_ssh"
+        destination:
+          port: 22
+        protocol: tcp
+        state: [ "new" ]
+        action: accept
+      - name: "accept_http"
+        destination:
+          port: 80
+        protocol: tcp
+        state: [ "new" ]
+        action: accept
+      - name: "accept_https"
+        destination:
+          port: 443
+        protocol: tcp
+        state: [ "new" ]
+        action: accept
+      - name: "accept_wireguard"
+        destination:
+          port: 51820
+        log: true
+        protocol: udp
+        source:
+          fqdn: gate-1.ovh.infra.mout.ch
+        action: accept
+      - name: "accept_k8s_fr"
+        destination:
+          port: 6443
+        protocol: tcp
+        source:
+          geoip:
+            country_code: fr
+        action: accept
+      - name: "accept_k8s_ch"
+        destination:
+          port: 6443
+        source:
+          geoip:
+            country_code: ch
+        log: true
+        protocol: tcp
+        action: accept
+      - name: "accept_minecraft_1"
+        destination:
+          port: 25565
+        protocol: tcp
+        state: [ "new" ]
+        action: accept
+      - name: "accept_minecraft_2"
+        destination:
+          port: 25566
+        protocol: tcp
+        state: [ "new" ]
+        action: accept
+      - name: "accept_minecraft_3"
+        destination:
+          port: 25567
+        protocol: tcp
+        state: [ "new" ]
+        action: accept
+
+# Firewall IPV6
+firewall_rules_v6:
+  "IPV6WAN_IN":
+    default_action: "drop"
+    log: true
+    rules:
+      - name: "accept_icmpv6"
+        action: accept
+        protocol: "icmpv6"
+      - name: "accept_dhcp"
+        destination:
+          port: 546
+        source:
+          port: 547
+        protocol: udp
+        action: accept
+
+  "IPV6WAN_LOCAL":
+    default_action: "drop"
+    log: true
+    rules:
+      - name: "accept_icmpv6"
+        action: accept
+        protocol: "icmpv6"
+      - name: "accept_dhcp"
+        destination:
+          port: 546
+        source:
+          port: 547
+        protocol: udp
+        action: accept
+
+# Interfaces
+interfaces:
+  eth0:
+    type: "ethernet"
+    description: "WAN"
+    hw_id: "24:6e:96:0c:b7:67"
+    mtu: 1500
+    ipv6:
+      address: "autoconf"
+      dup_addr_detect_transmits:  1
+    dhcpv6:
+      pd:
+        0:
+          length: 48
+          interfaces:
+            eth1:
+              address: 1
+              sla_id: 0
+            eth2:
+              address: 1
+              sla_id: 1
+    offload:
+      - gro
+      - gso
+      - sg
+      - tso
+    units:
+      0:
+        family:
+          inet:
+            address:
+              'dhcp': {}
+              'dhcpv6': {}
+            filter:
+              local: "WAN_LOCAL"
+            filterv6:
+              input: "IPV6WAN_IN"
+              local: "IPV6WAN_LOCAL"
+
+  eth1:
+    type: "ethernet"
+    description: "public"
+    hw_id: "24:6e:96:0c:b7:66"
+    mtu: 1500
+    units:
+      0:
+        family:
+          inet:
+            address:
+              '192.168.2.1/24': {}
+
+  eth2:
+    type: "ethernet"
+    description: "dmz"
+    hw_id: "52:54:00:20:70:f0"
+    mtu: 1500
+    units:
+      0:
+        family:
+          inet:
+            address:
+              '192.168.13.1/24': {}
+
+  eth3:
+    type: "ethernet"
+    description: "lan"
+    hw_id: "52:54:00:8e:81:c3"
+    mtu: 1500
+    units:
+      0:
+        family:
+          inet:
+            address:
+              '192.168.14.1/24': {}
+            filter:
+              local: "LAN_LOCAL"
+              output: "LAN_OUT"
+
+  eth4:
+    type: "ethernet"
+    description: "ceph"
+    hw_id: "52:54:00:7e:96:38"
+    mtu: 1500
+    units:
+      0:
+        family:
+          inet:
+            address:
+              '192.168.15.1/24': {}
+
+  eth5:
+    type: "ethernet"
+    description: "default"
+    hw_id: "52:54:00:8d:c1:7f"
+    mtu: 1500
+    units:
+      0:
+        family:
+          inet:
+            address:
+              '192.168.122.10/24': { }
+
+  # Wireguard
+  wg01:
+    type: wireguard
+    description: "interco"
+    mtu: "1420"
+    peers:
+      gate-1.ovh:
+        address: 152.228.139.220
+        allowed_ips: 192.168.10.0/24
+        persistent_keepalive: 25
+        port: 51820
+        public_key: "{{ lookup('community.hashi_vault.hashi_vault', 'mout.ch/data/wireguard/gate-1.ovh.infra.mout.ch', validate_certs=false)['public-key'] }}"
+    port: 51820
+    private_key: "{{ lookup('community.hashi_vault.hashi_vault', 'mout.ch/data/wireguard/gate-1.ovh.infra.mout.ch', validate_certs=false)['private-key'] }}"
+    units:
+      0:
+        family:
+          inet:
+            address:
+              '192.168.10.5/24': { }
+
+# Load Balancing
+load_balancing:
+  reverse_proxy:
+    services:
+      http:
+        backend: k3s-http
+        mode: tcp
+        port: 80
+        redirect_http_to_https: true
+      https:
+        backend: k3s-https
+        mode: tcp
+        port: 443
+      kubectl:
+        backend: k3s-api
+        mode: tcp
+        port: 6443
+      minecraft:
+        backend: minecraft-tcp
+        mode: tcp
+        port: 25565
+      minecraft-2:
+        backend: minecraft-2-tcp
+        mode: tcp
+        port: 25566
+      minecraft-3:
+        backend: minecraft-3-tcp
+        mode: tcp
+        port: 25567
+    backends:
+      k3s-api:
+        balance: source-address
+        mode: tcp
+        servers:
+          - name: compute-2
+            address: 192.168.13.11
+            check: true
+            port: 6443
+      k3s-http:
+        balance: source-address
+        mode: tcp
+        servers:
+          - name: compute-2
+            address: 192.168.13.11
+            check: true
+            port: 80
+      k3s-https:
+        balance: source-address
+        mode: tcp
+        servers:
+          - name: compute-2
+            address: 192.168.13.11
+            check: true
+            port: 443
+      minecraft-tcp:
+        balance: source-address
+        mode: tcp
+        servers:
+          - name: compute-2
+            address: 192.168.13.11
+            check: true
+            port: 30573
+      minecraft-2-tcp:
+        balance: source-address
+        mode: tcp
+        servers:
+          - name: compute-2
+            address: 192.168.13.11
+            check: true
+            port: 30574
+      minecraft-3-tcp:
+        balance: source-address
+        mode: tcp
+        servers:
+          - name: compute-2
+            address: 192.168.13.11
+            check: true
+            port: 30575
