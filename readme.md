@@ -2,17 +2,13 @@
 
 Ansible configuration for all mout.ch infrastructure. Description to be completed.
 
-VPN between undercloud and other nodes
 
-4 Servers
-3 ceph and 1 compute
+# VPN
 
-# Network
-
-VPN `192.168.10.0/24`
-- under-1 `192.168.10.1`
-- blotzheim `192.168.10.2`
-- hirsingue `192.168.10.3`
+CIDR `192.168.10.0/24`
+- gate-1.ovh `192.168.10.1`
+- gate-1.blotzheim `192.168.10.2`
+- gate-1.hirsingue `192.168.10.3`
 
 ## Blotzheim
 
