@@ -28,7 +28,7 @@ roles:
     version: 2b76d52deb622a10d4d11a7e86ac0f02388b5f70
   - name: cri.common
     src: git+https://gitlab.cri.epita.fr/cri/iac/ansible/roles/common.git
-    version: 0.1.0
+    version: a30b138204f2dd0f0f99a8826e8ea02557fa3e30
   - name: cri.docker
     src: git+https://gitlab.cri.epita.fr/cri/iac/ansible/roles/docker.git
     version: 0.2.0
