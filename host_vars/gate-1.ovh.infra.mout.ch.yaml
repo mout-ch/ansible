@@ -1,4 +1,5 @@
 ---
+fqdn: gate-1.ovh.infra.mout.ch
 setup_type: "server"
 peers:
   - public_key: "{{ lookup('community.general.hashi_vault', 'mout.ch/data/vpn/gate-1.blotzheim.infra.mout.ch')['public_key'] }}"

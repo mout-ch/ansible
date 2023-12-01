@@ -138,7 +138,7 @@
   roles:
      - role: xanmanning.k3s
 
-- hosts: under-1.infra.mout.ch
+- hosts: gate-1.infra.mout.ch
   tags: k3s
   vars:
     k3s_release_version: latest

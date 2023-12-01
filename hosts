@@ -1,8 +1,8 @@
 [vpn:children]
 gate
-undercloud
 
 [gate]
+gate-1.ovh.infra.mout.ch
 gate-1.hirsingue.infra.mout.ch
 
 [gate:children]
@@ -10,9 +10,6 @@ vyos
 
 [ceph]
 ceph-[1:3].blotzheim.infra.mout.ch
-
-[undercloud]
-under-1.infra.mout.ch
 
 [k3s:children]
 compute
