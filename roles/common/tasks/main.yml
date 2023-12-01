@@ -13,5 +13,4 @@
     update_cache: true
     state: present
     name:
-      - ntp
       - iptables-persistent
