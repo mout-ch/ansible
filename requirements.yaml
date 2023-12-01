@@ -102,7 +102,7 @@ roles:
   - src: https://gitlab.com/consensus.enterprises/ansible-roles/ansible-role-wireguard-cloud-gateway.git
     name: consensus.wireguard_cloud_gateway
     scm: git
-    version: 3ee1e52456f93367857cf2583d7bbe1b015b3f1f
+    version: 523a89f365915534e0cf0a240341c9b110363c7b
 
   - src: git+https://github.com/mrlesmithjr/ansible-netplan
     name: mrlesmithjr.netplan
