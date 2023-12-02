@@ -7,8 +7,8 @@ client_wireguard_ip: 192.168.10.3/24
 client_accessible_ips: "192.168.10.0/24"
 
 # Server configuration.
-server_public_ip: under-1.infra.mout.ch
-server_public_key: "{{ lookup('community.general.hashi_vault', 'mout.ch/data/vpn/under-1.infra.mout.ch')['public_key'] }}"
+server_public_ip: gate-1.ovh.infra.mout.ch
+server_public_key: "{{ lookup('community.hashi_vault.hashi_vault', 'mout.ch/data/wireguard/gate-1.ovh.infra.mout.ch', validate_certs=false)['public_key'] }}"
 
 netplan_enabled: true
 netplan_configuration:

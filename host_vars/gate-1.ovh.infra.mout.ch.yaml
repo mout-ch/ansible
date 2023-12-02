@@ -2,9 +2,11 @@
 fqdn: gate-1.ovh.infra.mout.ch
 setup_type: "server"
 peers:
-  - public_key: "{{ lookup('community.general.hashi_vault', 'mout.ch/data/vpn/gate-1.blotzheim.infra.mout.ch')['public_key'] }}"
-    allowed_ips: "192.168.11.0/24, 192.168.10.0/24"
-  - public_key: "{{ lookup('community.general.hashi_vault', 'mout.ch/data/vpn/gate-1.hirsingue.infra.mout.ch')['public_key'] }}"
+  - name: gate-1.blotzheim.infra.mout.ch
+    public_key: "{{ lookup('community.hashi_vault.hashi_vault', 'mout.ch/data/wireguard/gate-1.blotzheim.infra.mout.ch', validate_certs=false)['public_key'] }}"
+    allowed_ips: "192.168.13.0/24, 192.168.10.0/24"
+  - name: gate-1.hirsingue.infra.mout.ch
+    public_key: "{{ lookup('community.hashi_vault.hashi_vault', 'mout.ch/data/wireguard/gate-1.hirsingue.infra.mout.ch', validate_certs=false)['public_key'] }}"
     allowed_ips: "192.168.12.0/24, 192.168.10.0/24"
 
 server_wireguard_ip: 192.168.10.1

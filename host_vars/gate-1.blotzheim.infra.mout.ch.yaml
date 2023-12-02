@@ -374,9 +374,9 @@ interfaces:
         allowed_ips: 192.168.10.0/24
         persistent_keepalive: 25
         port: 51820
-        public_key: "{{ lookup('community.hashi_vault.hashi_vault', 'mout.ch/data/wireguard/gate-1.ovh.infra.mout.ch', validate_certs=false)['public-key'] }}"
+        public_key: "{{ lookup('community.hashi_vault.hashi_vault', 'mout.ch/data/wireguard/gate-1.ovh.infra.mout.ch', validate_certs=false)['public_key'] }}"
     port: 51820
-    private_key: "{{ lookup('community.hashi_vault.hashi_vault', 'mout.ch/data/wireguard/gate-1.ovh.infra.mout.ch', validate_certs=false)['private-key'] }}"
+    private_key: "{{ lookup('community.hashi_vault.hashi_vault', 'mout.ch/data/wireguard/gate-1.blotzheim.infra.mout.ch', validate_certs=false)['private_key'] }}"
     units:
       0:
         family:
