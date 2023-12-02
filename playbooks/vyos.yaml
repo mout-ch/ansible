@@ -1,10 +1,14 @@
 ---
 # This role is strongly inspired from the ansible-vyos project
 # See https://github.com/DreamLab/ansible-vyos
+
+# Running this playbook either in check_mode or not require the generation of the config and the sending to the device in order to gather a diff.
+# For this reason all taks are hardoced with `check_mode: false`, only `commit_changes` in napalm module will see its value changed.
 - name: Prepare dirs
   hosts: vyos
   gather_facts: no
   connection: local
+  check_mode: false
 
   tasks:
     - name: Remove old compiled config
@@ -61,6 +65,7 @@
   tags: build
   vars_files:
     - ../vars/ssh_keys.yml
+  check_mode: false
 
   roles:
     - vyos/system
@@ -75,6 +80,7 @@
   connection: local
   gather_facts: no
   tags: compile
+  check_mode: false
 
   tasks:
     - name: Assemble configuration
@@ -99,9 +105,10 @@
 - name: Sent configuration to the device
   hosts: vyos
   connection: network_cli
+  check_mode: false
 
   tasks:
-    - name: Load Config, Diff ({{ ansible_diff_mode }}), Commit ({{ ansible_check_mode }})
+    - name: Load Config, Diff ({{ ansible_diff_mode }}), Commit ({{ not ansible_check_mode }})
       napalm.napalm.napalm_install_config:
         dev_os: 'vyos'
         config_file: "compiled/{{inventory_hostname}}/running.conf"
@@ -117,13 +124,13 @@
       delegate_to: localhost
 
 
-# This step is important to be sure that the secrets, gathered by the vault
-# lookup plugin, stay not on the machine.
+# This step is important to be sure that the secrets, gathered by the vault lookup plugin, stay not on the machine afterward.
 # TODO: make the cleanup always run, even if the playbook fails
 - name: Cleanup generated config
   hosts: vyos
   gather_facts: no
   connection: local
+  check_mode: false
 
   tasks:
     - name: Remove config
