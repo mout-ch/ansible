@@ -143,3 +143,7 @@ roles:
   - src: git+https://github.com/PyratLabs/ansible-role-k3s.git
     name: xanmanning.k3s
     version: 37cca2e4874296961cc0138533cadd824f4fdb74 # 3.4.2
+
+  - src: git+https://github.com/logan2211/ansible-bird.git
+    name: logan2211.bird
+    version: 904e55d56f82f36e3e9e9fbc5b3bd932a1151f7b # 1.9.0
