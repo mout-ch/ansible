@@ -17,10 +17,14 @@ spec:
   repo: https://helm.cilium.io/
   targetNamespace: cilium
   valuesContent: |-
-    operator
+    operator:
+      enabled: true
     global:
       tag: "v1.14.3"
-      containerRuntime:
-        integration: "containerd"
-        socketPath: "/var/run/k3s/containerd/containerd.sock"
-      kubeProxyReplacement: "strict"
+    containerRuntime:
+      integration: "containerd"
+      socketPath: "/var/run/k3s/containerd/containerd.sock"
+    kubeProxyReplacement: "strict"
+
+    bgpControlPlane:
+      enabled: true
