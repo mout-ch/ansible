@@ -56,6 +56,22 @@
         reload: yes
 
 - hosts: vpn
+  tags: wireguard
+  tasks:
+    - name: get wireguard public key
+      slurp:
+        src: "{{ public_key_file_path }}"
+      register: wireguard_public_key
+      become: true
+    - name: write wireguard public key to vault
+      community.hashi_vault.vault_kv2_write:
+        path: "wireguard/{{ inventory_hostname }}"
+        engine_mount_point: "mout.ch"
+        data:
+          public_key: "{{ wireguard_public_key['content'] | b64decode }}"
+      delegate_to: localhost
+
+- hosts: vpn
   roles:
     - consensus.wireguard_cloud_gateway
   tags: vpn
@@ -202,3 +218,9 @@
           data:
             VAULT_TOKEN: "{{ lookup('community.hashi_vault.vault_token_create', ttl='24h', policies=['vault-secrets-operator'], validate_certs=false).auth.client_token | b64encode }}"
             VAULT_TOKEN_LEASE_DURATION: "{{ 86400 | b64encode }}"
+
+# BGP
+- hosts: gate-1.ovh.infra.mout.ch
+  tags: bgp
+  roles:
+    - role: logan2211.bird

@@ -4,9 +4,30 @@ setup_type: "server"
 peers:
   - name: gate-1.blotzheim.infra.mout.ch
     public_key: "{{ lookup('community.hashi_vault.hashi_vault', 'mout.ch/data/wireguard/gate-1.blotzheim.infra.mout.ch', validate_certs=false)['public_key'] }}"
-    allowed_ips: "192.168.13.0/24, 192.168.10.0/24"
+    allowed_ips: "192.168.14.0/24, 192.168.10.0/24"
   - name: gate-1.hirsingue.infra.mout.ch
     public_key: "{{ lookup('community.hashi_vault.hashi_vault', 'mout.ch/data/wireguard/gate-1.hirsingue.infra.mout.ch', validate_certs=false)['public_key'] }}"
     allowed_ips: "192.168.12.0/24, 192.168.10.0/24"
 
 server_wireguard_ip: 192.168.10.1
+
+bird_router_id: "192.168.10.1"
+bird_major_version: 2
+
+bird_ipv4_protocols:
+  device: |
+      scan time 10;
+  direct: |
+      disabled;
+  kernel: |
+      import none;
+      export none;
+  static: |
+      route 10.0.0.0/24 via "cilium_host";
+  bgp:
+    uplink0: |
+      description "BGP uplink 0";
+      local 192.168.10.1 as 64512;
+      neighbor 192.168.14.21 as 64521;
+      import filter {reject;};
+      export filter {accept;};
