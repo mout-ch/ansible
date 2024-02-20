@@ -6,3 +6,5 @@ k3s_server:
   disable-network-policy: true
   tls-san:
     - "blotzheim.infra.mout.ch"
+  disable:
+    - local-storage

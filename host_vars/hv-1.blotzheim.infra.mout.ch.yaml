@@ -32,7 +32,7 @@ lvm_groups:
       - lvname: ceph
         size: 2T
         create: true
-      - lvname: compute-2-data
+      - lvname: storj-0
         size: 10T
         create: true
         filesystem: xfs
@@ -49,7 +49,7 @@ lvm_groups:
       - lvname: ceph
         size: 2T
         create: true
-      - lvname: compute-2-data
+      - lvname: storj-1
         size: 10T
         create: true
         filesystem: xfs
@@ -66,7 +66,7 @@ lvm_groups:
       - lvname: ceph
         size: 2T
         create: true
-      - lvname: compute-2-data
+      - lvname: storj-2
         size: 10T
         create: true
         filesystem: xfs
@@ -83,7 +83,7 @@ lvm_groups:
       - lvname: ceph
         size: 2T
         create: true
-      - lvname: compute-2-data
+      - lvname: storj-3
         size: 10T
         create: true
         filesystem: xfs
@@ -440,7 +440,23 @@ kvm_vms:
       - disk_driver: virtio
         name: storj
         type: block
-        path: /dev/disk-0/compute-2-data
+        path: /dev/disk-0/storj-0
+        serial: storj-0
+      - disk_driver: virtio
+        name: storj
+        type: block
+        path: /dev/disk-3/storj-1
+        serial: storj-1
+      - disk_driver: virtio
+        name: storj
+        type: block
+        path: /dev/disk-6/storj-2
+        serial: storj-2
+      - disk_driver: virtio
+        name: storj
+        type: block
+        path: /dev/disk-9/storj-3
+        serial: storj-3
     network_interfaces:
       - source: lan
         network_driver: virtio
