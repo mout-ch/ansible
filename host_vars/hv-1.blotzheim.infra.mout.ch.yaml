@@ -24,6 +24,33 @@ netplan_configuration:
 
 manage_lvm: true
 lvm_groups:
+  - vgname: vg-root
+    disks:
+      - /dev/disk/by-id/wwn-0x61866da05ea535002dd563792c99e3c9-part2
+    create: true
+    lvnames:
+      - lvname: lv-os
+        size: 100G
+        create: true
+      - lvname: lv-libvirt-images
+        size: 600G
+        create: true
+        filesystem: xfs
+        mount: true
+        mntp: /var/lib/libvirt/images
+      - lvname: lv-ceph-db-0
+        size: 50G
+        create: true
+      - lvname: lv-ceph-db-1
+        size: 50G
+        create: true
+      - lvname: lv-ceph-db-2
+        size: 50G
+        create: true
+      - lvname: lv-ceph-db-3
+        size: 50G
+        create: true
+
   - vgname: disk-0
     disks:
       - /dev/disk/by-id/scsi-SATA_TOSHIBA_MG07ACA1_13P0A08EF94G
@@ -92,36 +119,13 @@ lvm_groups:
         size: 500G
         create: true
 
-  - vgname: disk-13
-    disks:
-      - /dev/disk/by-id/scsi-SATA_Samsung_SSD_860_S4CZNF0N471571X
-    create: true
-    lvnames:
-      - lvname: ceph-cache
-        size: 500G
-        create: true
-      - lvname: compute-2-sqlite
-        size: 10G
-        create: true
-
+# disk 13
+#     - /dev/disk/by-id/scsi-SATA_Samsung_SSD_860_S4CZNF0N471571X
 # disk 1
 #     - /dev/disk/by-id/scsi-SSEAGATE_ST300MM0006_S0K09N82
 # disk 4
 #     - /dev/disk/by-id/scsi-SSEAGATE_ST300MM0006_S0K06VZ0
 
-## RAID
-
-mdadm_arrays:
-  - name: md/libvirt-root-images
-    devices:
-      - '/dev/disk-0/libvirt-root-images'
-      - '/dev/disk-3/libvirt-root-images'
-      - '/dev/disk-6/libvirt-root-images'
-      - '/dev/disk-9/libvirt-root-images'
-    filesystem: 'ext4'
-    level: '5'
-    mountpoint: '/mnt/libvirt-root-images'
-    state: 'present'
 
 # KVM
 
@@ -132,7 +136,7 @@ kvm_config_virtual_networks: true
 kvm_enable_libvirtd_syslog: true
 kvm_manage_vms: true
 kvm_disable_apparmor: false
-kvm_images_path: /mnt/libvirt-root-images
+kvm_images_path: /var/lib/libvirt/images/
 
 ## Network
 
@@ -238,6 +242,7 @@ kvm_vms:
               dhcp4: true
 
   - name: ceph-1
+    uuid: 1184444c-6623-4128-b9d7-c8780c0896ec
     autostart: true
     state: running
     memory: 8192
@@ -256,6 +261,11 @@ kvm_vms:
         name: ceph
         type: block
         path: /dev/disk-0/ceph
+      - disk_driver: virtio
+        name: ceph-db
+        type: block
+        path: /dev/vg-root/lv-ceph-db-0
+        serial: lv-ceph-db-0
     network_interfaces:
       - source: lan
         network_driver: virtio
@@ -298,6 +308,7 @@ kvm_vms:
               dhcp6: false
 
   - name: ceph-2
+    uuid: 445e4ef0-be8e-4e35-b50a-c0bca4436204
     autostart: true
     state: running
     memory: 8192
@@ -316,6 +327,11 @@ kvm_vms:
         name: ceph
         type: block
         path: /dev/disk-3/ceph
+      - disk_driver: virtio
+        name: ceph-db
+        type: block
+        path: /dev/vg-root/lv-ceph-db-1
+        serial: lv-ceph-db-1
     network_interfaces:
       - source: lan
         network_driver: virtio
@@ -358,6 +374,7 @@ kvm_vms:
               dhcp6: false
 
   - name: ceph-3
+    uuid: 45c2d886-f4b3-42b4-8435-96d251e5ef89
     autostart: true
     state: running
     memory: 8192
@@ -376,6 +393,11 @@ kvm_vms:
         name: ceph
         type: block
         path: /dev/disk-6/ceph
+      - disk_driver: virtio
+        name: ceph-db
+        type: block
+        path: /dev/vg-root/lv-ceph-db-2
+        serial: lv-ceph-db-2
     network_interfaces:
       - source: lan
         network_driver: virtio
@@ -433,10 +455,6 @@ kvm_vms:
         size: 102400
         backing_file: https://cloud-images.ubuntu.com/jammy/20231027/jammy-server-cloudimg-amd64.img
         backing_file_format: qcow2
-      - disk_driver: virtio
-        name: ceph
-        type: block
-        path: /dev/disk-13/compute-2-sqlite
       - disk_driver: virtio
         name: storj
         type: block
