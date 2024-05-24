@@ -1,33 +1,40 @@
 ---
 fqdn: gate-1.ovh.infra.mout.ch
-setup_type: "server"
-peers:
-  - name: gate-1.blotzheim.infra.mout.ch
-    public_key: "{{ lookup('community.hashi_vault.hashi_vault', 'mout.ch/data/wireguard/gate-1.blotzheim.infra.mout.ch', validate_certs=false)['public_key'] }}"
-    allowed_ips: "192.168.14.0/24, 192.168.10.0/24"
-  - name: gate-1.hirsingue.infra.mout.ch
-    public_key: "{{ lookup('community.hashi_vault.hashi_vault', 'mout.ch/data/wireguard/gate-1.hirsingue.infra.mout.ch', validate_certs=false)['public_key'] }}"
-    allowed_ips: "192.168.12.0/24, 192.168.10.0/24"
 
-server_wireguard_ip: 192.168.10.1
+setup_type: "client"
 
-bird_router_id: "192.168.10.1"
-bird_major_version: 2
+# Client configuration.
+client_wireguard_ip: 192.168.10.2/24
+# The private cloud network.  Can also be a comma-separated list.
+client_accessible_ips: "192.168.10.0/24,192.168.14.0/24"
 
-bird_ipv4_protocols:
-  device: |
-      scan time 10;
-  direct: |
-      disabled;
-  kernel: |
-      import none;
-      export none;
-  static: |
-      route 10.0.0.0/24 via "cilium_host";
-  bgp:
-    uplink0: |
-      description "BGP uplink 0";
-      local 192.168.10.1 as 64512;
-      neighbor 192.168.14.21 as 64521;
-      import filter {reject;};
-      export filter {accept;};
+# Server configuration.
+server_public_ip: gate-1.blotzheim.infra.mout.ch
+server_public_key: "{{ lookup('community.hashi_vault.hashi_vault', 'mout.ch/data/wireguard/gate-1.blotzheim.infra.mout.ch', validate_certs=false)['public_key'] }}"
+
+k3s_registration_address: 192.168.14.21
+k3s_control_token: "{{ lookup('community.hashi_vault.hashi_vault', 'mout.ch/data/k3s/token', validate_certs=false)['token'] }}"
+k3s_control_node: false
+
+netplan_enabled: true
+netplan_configuration:
+  network:
+    version: 2
+    ethernets:
+      ens3:
+        match:
+          macaddress: "fa:16:3e:ff:49:61"
+        addresses:
+           - 152.228.139.220/32
+
+           - 188.165.24.51/32
+           - 94.23.73.226/32
+           - 87.98.226.82/32
+           - 188.165.136.129/32
+           - 87.98.236.129/32
+           - 188.165.0.194/32
+           - 94.23.160.81/32
+
+           - 94.23.147.108/32
+           - 94.23.169.12/32
+          # - 87.98.250.127/32
