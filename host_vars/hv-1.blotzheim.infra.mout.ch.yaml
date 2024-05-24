@@ -119,8 +119,15 @@ lvm_groups:
         size: 500G
         create: true
 
-# disk 13
-#     - /dev/disk/by-id/scsi-SATA_Samsung_SSD_860_S4CZNF0N471571X
+  - vgname: disk-2
+    disks:
+      - /dev/disk/by-id/scsi-SATA_WDC_WD5000AAKX-6_WD-WCC2EF768930
+    create: true
+    lvnames:
+      - lvname: qbitorrent
+        size: 100%VG
+        create: true
+
 # disk 1
 #     - /dev/disk/by-id/scsi-SSEAGATE_ST300MM0006_S0K09N82
 # disk 4
