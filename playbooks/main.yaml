@@ -63,6 +63,7 @@
         src: "{{ public_key_file_path }}"
       register: wireguard_public_key
       become: true
+      ignore_errors: true
     - name: write wireguard public key to vault
       community.hashi_vault.vault_kv2_write:
         path: "wireguard/{{ inventory_hostname }}"
@@ -70,6 +71,7 @@
         data:
           public_key: "{{ wireguard_public_key['content'] | b64decode }}"
       delegate_to: localhost
+      ignore_errors: true
 
 - hosts: vpn
   roles:
@@ -133,23 +135,29 @@
 - hosts: compute-2.blotzheim.infra.mout.ch
   tags: [k3s-data, k3s]
   vars:
-    mount_path: /mnt/compute-2-data
+    volumes:
+      - storj-0
+      - storj-1
+      - storj-2
+      - storj-3
   tasks:
     - name: Ensure data folder exist
       file:
-        path: "{{ mount_path }}"
+        path: "/mnt/{{ item }}"
         state: directory
       become: yes
+      loop: "{{ volumes }}"
 
     - name: Mount compute-2-data volume
       mount:
-        path: "{{ mount_path }}"
-        src: /dev/vdc
+        path: "/mnt/{{ item }}"
+        src: "/dev/disk/by-id/virtio-{{ item }}"
         state: mounted
         opts: defaults
         fstype: xfs
+      loop: "{{ volumes }}"
 
-- hosts: k3s
+- hosts: k3s, gate-1.ovh.infra.mout.ch
   tags: k3s
   roles:
      - role: xanmanning.k3s
@@ -218,9 +226,3 @@
           data:
             VAULT_TOKEN: "{{ lookup('community.hashi_vault.vault_token_create', ttl='24h', policies=['vault-secrets-operator'], validate_certs=false).auth.client_token | b64encode }}"
             VAULT_TOKEN_LEASE_DURATION: "{{ 86400 | b64encode }}"
-
-# BGP
-- hosts: gate-1.ovh.infra.mout.ch
-  tags: bgp
-  roles:
-    - role: logan2211.bird
