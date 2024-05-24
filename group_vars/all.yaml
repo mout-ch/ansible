@@ -1,5 +1,12 @@
 ---
 
+# File and directory paths.
+configuration_directory: "/etc/wireguard"
+private_key_file_name: "privatekey"
+private_key_file_path: "{{ configuration_directory }}/{{ private_key_file_name }}"
+public_key_file_name: "publickey"
+public_key_file_path: "{{ configuration_directory }}/{{ public_key_file_name }}"
+
 unattended_upgrades_origins:
   - "packagecloud.io/netdata/netdata:${distro_codename}"
 
