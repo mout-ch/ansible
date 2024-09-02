@@ -37,3 +37,15 @@ Ceph `192.168.12.0/24`
 Management `192.168.13.0/24`
 - gate-1 `192.168.13.1`
 - hv-1 `192.168.13.10`
+
+
+Cilium install:
+```
+helm upgrade cilium cilium/cilium --namespace cilium \
+  --install \
+  --create-namespace \
+  --set kubeProxyReplacement=true \
+  --set operator.replicas=1 \
+  --set ipam.operator.clusterPoolIPv4PodCIDRList="10.42.0.0/16"
+
+```
