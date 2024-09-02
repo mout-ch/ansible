@@ -26,29 +26,11 @@ manage_lvm: true
 lvm_groups:
   - vgname: vg-root
     disks:
-      - /dev/disk/by-id/wwn-0x61866da05ea535002dd563792c99e3c9-part2
+      - /dev/disk/by-id/nvme-eui.000000000000001000080d050004e0b2-part2
     create: true
     lvnames:
       - lvname: lv-os
         size: 100G
-        create: true
-      - lvname: lv-libvirt-images
-        size: 600G
-        create: true
-        filesystem: xfs
-        mount: true
-        mntp: /var/lib/libvirt/images
-      - lvname: lv-ceph-db-0
-        size: 50G
-        create: true
-      - lvname: lv-ceph-db-1
-        size: 50G
-        create: true
-      - lvname: lv-ceph-db-2
-        size: 50G
-        create: true
-      - lvname: lv-ceph-db-3
-        size: 50G
         create: true
 
   - vgname: disk-0

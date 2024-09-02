@@ -90,7 +90,7 @@ firewall_rules:
         state: ["invalid"]
       - name: "drop_spam"
         recent:
-          count: 5
+          count: 30
           time: "minute"
         state: [ "new" ]
         action: drop
@@ -125,10 +125,23 @@ firewall_rules:
         protocol: tcp
         state: [ "new" ]
         action: accept
+      - name: "accept_k3s_api"
+        destination:
+          port: 6443
+        protocol: tcp
+        state: [ "new" ]
+        action: accept
 
   "LAN_OUT":
     default_action: drop
     rules:
+      # Exception for gate-1.ovh.infra.mout.ch
+      - name: "accept_new"
+        action: accept
+        state: ["new"]
+        protocol: tcp
+        source:
+          address: 192.168.10.2
       - name: "accept_established"
         action: accept
         state: ["established", "related"]
@@ -162,7 +175,7 @@ firewall_rules:
         state: [ "invalid" ]
       - name: "drop_spam"
         recent:
-          count: 10
+          count: 30
           time: "minute"
         state: ["new"]
         action: drop
@@ -190,8 +203,6 @@ firewall_rules:
           port: 51820
         log: true
         protocol: udp
-        source:
-          fqdn: gate-1.ovh.infra.mout.ch
         action: accept
       - name: "accept_k8s_fr"
         destination:
@@ -336,7 +347,7 @@ interfaces:
             address:
               '192.168.14.1/24': {}
             filter:
-              local: "LAN_LOCAL"
+              #local: "LAN_LOCAL" TODO tempo FIX!!!
               output: "LAN_OUT"
 
   eth4:
@@ -351,17 +362,17 @@ interfaces:
             address:
               '192.168.15.1/24': {}
 
-  eth5:
-    type: "ethernet"
-    description: "default"
-    hw_id: "52:54:00:8d:c1:7f"
-    mtu: 1500
-    units:
-      0:
-        family:
-          inet:
-            address:
-              '192.168.122.10/24': { }
+  # eth5:
+  #   type: "ethernet"
+  #   description: "default"
+  #   hw_id: "52:54:00:8d:c1:7f"
+  #   mtu: 1500
+  #   units:
+  #     0:
+  #       family:
+  #         inet:
+  #           address:
+  #             '192.168.122.10/24': { }
 
   # Wireguard
   wg01:
@@ -371,10 +382,14 @@ interfaces:
     peers:
       gate-1.ovh:
         address: 152.228.139.220
-        allowed_ips: 192.168.10.0/24
+        allowed_ips: 192.168.10.2/32
         persistent_keepalive: 25
         port: 51820
         public_key: "{{ lookup('community.hashi_vault.hashi_vault', 'mout.ch/data/wireguard/gate-1.ovh.infra.mout.ch', validate_certs=false)['public_key'] }}"
+      theater-1.magstatt:
+        allowed_ips: 192.168.10.3/32
+        persistent_keepalive: 25
+        public_key: "{{ lookup('community.hashi_vault.hashi_vault', 'mout.ch/data/wireguard/theater-1.magstatt.infra.mout.ch', validate_certs=false)['public_key'] }}"
     port: 51820
     private_key: "{{ lookup('community.hashi_vault.hashi_vault', 'mout.ch/data/wireguard/gate-1.blotzheim.infra.mout.ch', validate_certs=false)['private_key'] }}"
     units:
@@ -382,7 +397,7 @@ interfaces:
         family:
           inet:
             address:
-              '192.168.10.5/24': { }
+              '192.168.10.1/24': { }
 
 # Load Balancing
 load_balancing:

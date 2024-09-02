@@ -138,10 +138,14 @@ offload {
 {% if interfaces[intf].peers is defined %}
 {% for peer in interfaces[intf].peers %}
     peer {{ peer }} {
+{% if interfaces[intf].peers[peer].address is defined %}
         address {{ interfaces[intf].peers[peer].address }}
+{% endif %}
         allowed-ips {{ interfaces[intf].peers[peer].allowed_ips }}
         persistent-keepalive {{ interfaces[intf].peers[peer].persistent_keepalive | default("30") }}
+{% if interfaces[intf].peers[peer].port is defined %}
         port {{ interfaces[intf].peers[peer].port | default("51820") }}
+{% endif %}
         public-key {{ interfaces[intf].peers[peer].public_key }}
     }
 {% endfor %}

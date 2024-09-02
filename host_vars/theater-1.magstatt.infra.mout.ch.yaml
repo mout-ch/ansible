@@ -1,0 +1,107 @@
+---
+fqdn: theater-1.magstatt.infra.mout.ch
+
+k3s_release_version: v1.28.1+k3s1
+k3s_server:
+  flannel-backend: none
+  disable-network-policy: true
+  tls-san:
+    - "blotzheim.infra.mout.ch"
+    - "theater-1.magstatt.infra.mout.ch"
+  disable:
+    - local-storage
+
+setup_type: "client"
+
+# Client configuration.
+client_wireguard_ip: 192.168.10.3/24
+
+# The private cloud network.  Can also be a comma-separated list.
+client_accessible_ips: "192.168.10.0/24,192.168.14.0/24"
+
+# Server configuration.
+server_public_ip: gate-1.blotzheim.infra.mout.ch
+server_public_key: "{{ lookup('community.hashi_vault.hashi_vault', 'mout.ch/data/wireguard/gate-1.blotzheim.infra.mout.ch', validate_certs=false)['public_key'] }}"
+
+# Network
+netplan_enabled: true
+netplan_packages: netplan.io
+netplan_configuration:
+  network:
+    version: 2
+    ethernets:
+      enp0s31f6:
+        addresses:
+          - 192.168.1.130/24
+        gateway4: 192.168.1.1
+        nameservers:
+          addresses:
+            - 8.8.8.8
+            - 8.8.4.4
+
+manage_lvm: true
+lvm_groups:
+  - vgname: vg-root
+    disks:
+      - /dev/disk/by-id/nvme-eui.000000000000001000080d050004e0b2-part2
+    create: true
+    lvnames:
+      - lvname: lv-os
+        size: 100G
+        create: true
+  - vgname: disk-0
+    disks:
+      - /dev/disk/by-id/ata-Samsung_SSD_870_EVO_2TB_S754NS0X106636K
+    create: true
+    lvnames:
+      - lvname: k3s-local-path
+        size: 100G
+        create: true
+        mount: true
+        mntp: /var/lib/volumes/k3s-local-path
+        filesystem: xfs
+      - lvname: media
+        size: 1T
+        create: true
+        mount: true
+        mntp: /var/lib/volumes/media
+        filesystem: xfs
+
+
+nfs_server_exports:
+  - export:
+    access:
+      - hostname: '192.168.1.132/32'
+        options:
+          - 'rw'
+          - 'sync'
+          - 'no_subtree_check'
+          - 'no_root_squash'
+          - 'insecure'
+      - hostname: '192.168.1.140/32'
+        options:
+          - 'rw'
+          - 'sync'
+          - 'no_subtree_check'
+          - 'no_root_squash'
+          - 'insecure'
+    mode: "u=rwx,g=rx,o=rx"
+    path: '/var/lib/volumes/media/movies'
+  - export:
+    access:
+      - hostname: '192.168.1.132/32'
+        options:
+          - 'rw'
+          - 'sync'
+          - 'no_subtree_check'
+          - 'no_root_squash'
+          - 'insecure'
+      - hostname: '192.168.1.140/32'
+        options:
+          - 'rw'
+          - 'sync'
+          - 'no_subtree_check'
+          - 'no_root_squash'
+          - 'insecure'
+    mode: "u=rwx,g=rx,o=rx"
+    path: '/var/lib/volumes/media/series'

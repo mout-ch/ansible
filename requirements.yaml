@@ -142,8 +142,12 @@ roles:
 
   - src: git+https://github.com/PyratLabs/ansible-role-k3s.git
     name: xanmanning.k3s
-    version: 37cca2e4874296961cc0138533cadd824f4fdb74 # 3.4.2
+    version: 19c24bd50381d06bac105ed7e9d012d73e46bef4 # 3.4.4
 
   - src: git+https://github.com/logan2211/ansible-bird.git
     name: logan2211.bird
     version: 904e55d56f82f36e3e9e9fbc5b3bd932a1151f7b # 1.9.0
+
+  - srd: git+https://github.com/mrlesmithjr/ansible-nfs-server.git
+    name: mrlesmithjr.nfs-server
+    version: f35ec754c804c608d6adc610fc2664511ef66643

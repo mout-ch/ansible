@@ -55,7 +55,7 @@
         state: present
         reload: yes
 
-- hosts: vpn
+- hosts: vpn, theater-1.magstatt.infra.mout.ch
   tags: wireguard
   tasks:
     - name: get wireguard public key
@@ -73,7 +73,7 @@
       delegate_to: localhost
       ignore_errors: true
 
-- hosts: vpn
+- hosts: vpn, theater-1.magstatt.infra.mout.ch
   roles:
     - consensus.wireguard_cloud_gateway
   tags: vpn
@@ -157,7 +157,7 @@
         fstype: xfs
       loop: "{{ volumes }}"
 
-- hosts: k3s, gate-1.ovh.infra.mout.ch
+- hosts: k3s, gate-1.ovh.infra.mout.ch, theater-1.magstatt.infra.mout.ch
   tags: k3s
   roles:
      - role: xanmanning.k3s
@@ -175,7 +175,7 @@
     - role: maxhoesel.ddclient
 
 # LVM
-- hosts: hypervisor
+- hosts: hypervisor, theater-1.magstatt.infra.mout.ch
   tags: lvm
   roles:
     - role: mrlesmithjr.lvm
@@ -200,19 +200,39 @@
   roles:
     - role: robertdebock.grub
 
-- hosts: compute-2.blotzheim.infra.mout.ch
+- hosts: compute-2.blotzheim.infra.mout.ch, theater-1.magstatt.infra.mout.ch
   tags: vault-operator
   tasks:
-    - name: Install pip3
+    - name: Install Python3 and pip3
       apt:
-        name: python3-pip
+        name:
+          - python3
+          - python3-venv
         state: present
         update_cache: true
-    - name: install kubernetes python on host
-      pip:
-        name: kubernetes
-        state: present
-    - name: Create and inject vault operator token in k3s
+
+    - name: Create a Python virtual environment
+      ansible.builtin.command:
+        cmd: python3 -m venv /opt/k8s_venv
+      args:
+        creates: /opt/k8s_venv
+
+    - name: Install pip in the virtual environment
+      ansible.builtin.command:
+        cmd: /opt/k8s_venv/bin/pip install --upgrade pip
+
+    - name: Install Kubernetes Python client in virtual environment
+      ansible.builtin.command:
+        cmd: /opt/k8s_venv/bin/pip install kubernetes
+      args:
+        creates: /opt/k8s_venv/bin/kubernetes
+
+    - name: Create and inject Vault operator token in k3s
+      vars:
+        ansible_python_interpreter: /opt/k8s_venv/bin/python
+      environment:
+        PATH: "/opt/k8s_venv/bin:{{ ansible_env.PATH }}"
+        VIRTUAL_ENV: "/opt/k8s_venv"
       kubernetes.core.k8s:
         state: present
         kubeconfig: /etc/rancher/k3s/k3s.yaml
@@ -226,3 +246,72 @@
           data:
             VAULT_TOKEN: "{{ lookup('community.hashi_vault.vault_token_create', ttl='24h', policies=['vault-secrets-operator'], validate_certs=false).auth.client_token | b64encode }}"
             VAULT_TOKEN_LEASE_DURATION: "{{ 86400 | b64encode }}"
+
+
+  # tasks:
+  #   - name: Install pip3
+  #     apt:
+  #       name: python3-pip
+  #       state: present
+  #       update_cache: true
+  #   - name: install kubernetes python on host
+  #     pip:
+  #       name: kubernetes
+  #       state: present
+  #   - name: Create and inject vault operator token in k3s
+  #     kubernetes.core.k8s:
+  #       state: present
+  #       kubeconfig: /etc/rancher/k3s/k3s.yaml
+  #       definition:
+  #         apiVersion: v1
+  #         kind: Secret
+  #         metadata:
+  #           name: vault-secrets-operator
+  #           namespace: vault-operator
+  #         type: Opaque
+  #         data:
+  #           VAULT_TOKEN: "{{ lookup('community.hashi_vault.vault_token_create', ttl='24h', policies=['vault-secrets-operator'], validate_certs=false).auth.client_token | b64encode }}"
+  #           VAULT_TOKEN_LEASE_DURATION: "{{ 86400 | b64encode }}"
+
+- hosts: theater-1.magstatt.infra.mout.ch
+  tags: folders
+  tasks:
+    - name: Ensure folders exist in /var/lib/volumes
+      file:
+        path: "/var/lib/volumes/media/{{ item }}"
+        state: directory
+        mode: "0777"
+      loop:
+        - downloads/incomplete
+        - downloads/complete
+        - downloads/torrents
+        - movies/radarr
+        - series/sonarr
+
+- hosts: theater-1.magstatt.infra.mout.ch
+  tags: k3s-secret
+  tasks:
+    - name: Read the kubeconfig file from the remote machine
+      ansible.builtin.slurp:
+        src: /etc/rancher/k3s/k3s.yaml #TODO could be variabilized
+      register: k3s_kubeconfig_raw
+
+    - name: Decode and parse the base64-encoded kubeconfig content
+      set_fact:
+        k3s_kubeconfig: "{{ k3s_kubeconfig_raw.content | b64decode | from_yaml }}"
+
+    - name: Write k3s_kubeconfig to vault
+      community.hashi_vault.vault_kv2_write:
+        path: "k3s/{{ inventory_hostname }}"
+        engine_mount_point: "mout.ch"
+        data:
+          ca: "{{ k3s_kubeconfig.clusters[0].cluster['certificate-authority-data'] | b64decode }}"
+          cert: "{{ k3s_kubeconfig.users[0].user['client-certificate-data'] | b64decode }}"
+          key: "{{ k3s_kubeconfig.users[0].user['client-key-data'] | b64decode }}"
+      delegate_to: localhost
+      ignore_errors: true
+
+- hosts: theater-1.magstatt.infra.mout.ch
+  tags: nfs
+  roles:
+    - role: mrlesmithjr.nfs-server
