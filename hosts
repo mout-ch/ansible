@@ -25,3 +25,6 @@ ceph
 
 [vyos]
 gate-1.blotzheim.infra.mout.ch ansible_port=22 ansible_user=vyos ansible_network_os=vyos
+
+[theater]
+theater-1.magstatt.infra.mout.ch
