@@ -6,15 +6,15 @@ authors = ["Pierre 'rootmout' Kelbert <rootmout@cri.epita.fr>"]
 
 [tool.poetry.dependencies]
 python = "^3.9"
-hvac = "^0.11.2"
-jmespath = "^0.10.0"
+hvac = "^1.0.0"
+jmespath = "^1.0.0"
 netaddr = "^0.8.0"
 napalm = "^4.1.0"
 napalm-vyos = { git="https://github.com/rootmout/napalm-vyos", branch="develop" }
 ansible = "^8.6.1"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 
 [build-system]
-requires = ["poetry>=0.12"]
-build-backend = "poetry.masonry.api"
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
