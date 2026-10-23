@@ -3,9 +3,13 @@ name = "ansible-venv"
 version = "0.1.0"
 description = ""
 authors = ["Pierre 'rootmout' Kelbert <rootmout@cri.epita.fr>"]
+package-mode = false
 
 [tool.poetry.dependencies]
-python = "^3.9"
+# ansible-core 2.15 (ansible 8) does not support Python >= 3.12 as controller
+python = ">=3.9,<3.12"
+# napalm 4.1 still imports pkg_resources, removed from recent setuptools
+setuptools = "<81"
 hvac = "^1.0.0"
 jmespath = "^1.0.0"
 netaddr = "^0.8.0"

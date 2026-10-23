@@ -28,3 +28,6 @@ gate-1.blotzheim.infra.mout.ch ansible_port=22 ansible_user=vyos ansible_network
 
 [theater]
 theater-1.magstatt.infra.mout.ch
+
+[backup]
+hv-1.hirsingue.infra.mout.ch

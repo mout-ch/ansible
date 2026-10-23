@@ -1,0 +1,53 @@
+---
+fqdn: hv-1.hirsingue.infra.mout.ch
+
+# K3s
+# Standalone cluster used as offsite backup target (S3 + backup cleanup)
+k3s_release_version: v1.28.1+k3s1
+k3s_server:
+  tls-san:
+    - "hv-1.hirsingue.infra.mout.ch"
+  default-local-storage-path: /var/lib/volumes/backup/k3s-local-path
+
+# Network
+netplan_enabled: true
+netplan_packages: netplan.io
+# Drop the DHCP config written by cloud-init at install time
+netplan_remove_existing: true
+netplan_configuration:
+  network:
+    version: 2
+    ethernets:
+      eno1:
+        match:
+          macaddress: "74:46:a0:9e:b6:a6"
+        set-name: eno1
+        addresses:
+          - 192.168.1.67/24
+        routes:
+          - to: default
+            via: 192.168.1.1
+        nameservers:
+          addresses: [ 8.8.8.8, 8.8.4.4 ]
+        dhcp4: false
+        dhcp6: false
+
+# Storage
+
+## RAID
+# sda + sdb (WD Red 2TB) mirrored for backups
+# sdc: system disk (vg-root), sdd (WD RE 1TB, old): left unused
+mdadm_arrays:
+  - name: md0
+    devices:
+      - /dev/disk/by-id/ata-WDC_WD20EFRX-68EUZN0_WD-WCC4M2VKN452
+      - /dev/disk/by-id/ata-WDC_WD20EFRX-68EUZN0_WD-WCC4M2VKN5TC
+    level: '1'
+    filesystem: xfs
+    mountpoint: /var/lib/volumes/backup
+    # Do not block boot if the array fails to assemble
+    opts: defaults,nofail
+    state: present
+
+## LVM
+manage_lvm: false

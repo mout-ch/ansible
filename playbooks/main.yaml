@@ -181,10 +181,44 @@
     - role: mrlesmithjr.lvm
 
 # RAID
-- hosts: hypervisor
+- hosts: hypervisor, backup
   tags: mdadm
   roles:
     - role: mrlesmithjr.mdadm
+  post_tasks:
+    # The role rebuilds the initramfs before writing mdadm.conf, so without
+    # this the array may come back as md127 on reboot and md0 won't mount
+    - name: Check if mdadm.conf is newer than the initramfs
+      ansible.builtin.shell: test /etc/mdadm/mdadm.conf -nt "$(readlink -f /boot/initrd.img)"
+      register: mdadm_conf_newer
+      changed_when: false
+      failed_when: false
+      when: mdadm_arrays | default([]) | length > 0
+
+    - name: Rebuild initramfs with RAID arrays
+      ansible.builtin.command: update-initramfs -u
+      when: mdadm_conf_newer.rc | default(1) == 0
+
+- hosts: backup
+  tags: backup
+  tasks:
+    # Keep cloud-init from rewriting netplan at boot
+    - name: Disable cloud-init network configuration
+      ansible.builtin.copy:
+        dest: /etc/cloud/cloud.cfg.d/99-disable-network-config.cfg
+        content: "network: {config: disabled}\n"
+        mode: "0644"
+
+    - name: Install smartmontools
+      ansible.builtin.apt:
+        name: smartmontools
+        state: present
+        update_cache: true
+
+- hosts: backup
+  tags: k3s
+  roles:
+     - role: xanmanning.k3s
 
 # KVM
 - hosts: hypervisor
