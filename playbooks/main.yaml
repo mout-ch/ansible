@@ -266,9 +266,29 @@
       args:
         creates: /opt/k8s_venv/bin/kubernetes
 
+    # Periodic tokens have no max TTL: the operator renews them every 12h
+    # forever. Orphan so they don't die with the token that created them.
+    - name: Ensure Vault token role for the operator
+      ansible.builtin.uri:
+        url: "{{ mout_vault_addr }}/v1/auth/token/roles/vault-secrets-operator"
+        method: POST
+        headers:
+          X-Vault-Token: "{{ mout_vault_token }}"
+        body_format: json
+        body:
+          allowed_policies:
+            - vault-secrets-operator
+          orphan: true
+          renewable: true
+          period: 24h
+        status_code: 204
+        validate_certs: false
+      delegate_to: localhost
+      run_once: true
+
     - name: Create Vault operator token
       ansible.builtin.uri:
-        url: "{{ mout_vault_addr }}/v1/auth/token/create"
+        url: "{{ mout_vault_addr }}/v1/auth/token/create/vault-secrets-operator"
         method: POST
         headers:
           X-Vault-Token: "{{ mout_vault_token }}"
@@ -276,7 +296,6 @@
         body:
           policies:
             - vault-secrets-operator
-          ttl: 24h
         validate_certs: false
       register: vault_operator_token
       delegate_to: localhost
@@ -301,6 +320,29 @@
           data:
             VAULT_TOKEN: "{{ vault_operator_token.json.auth.client_token | b64encode }}"
             VAULT_TOKEN_LEASE_DURATION: "{{ 86400 | b64encode }}"
+      register: vault_operator_secret
+      no_log: true
+
+    # The operator reads VAULT_TOKEN from env at startup only
+    - name: Restart Vault operator to load the new token
+      vars:
+        ansible_python_interpreter: /opt/k8s_venv/bin/python
+      environment:
+        PATH: "/opt/k8s_venv/bin:{{ ansible_env.PATH }}"
+        VIRTUAL_ENV: "/opt/k8s_venv"
+      kubernetes.core.k8s:
+        state: patched
+        kubeconfig: /etc/rancher/k3s/k3s.yaml
+        kind: Deployment
+        name: "{{ vault_operator_deployment | default('vault-operator-vault-secrets-operator') }}"
+        namespace: vault-operator
+        definition:
+          spec:
+            template:
+              metadata:
+                annotations:
+                  mout.ch/restarted-at: "{{ now(utc=true).isoformat() }}"
+      when: vault_operator_secret.changed
 
 
   # tasks:

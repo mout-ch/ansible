@@ -11,6 +11,8 @@ k3s_server:
   disable:
     - local-storage
 
+vault_operator_deployment: vault-operator-theater-1-vault-secrets-operator
+
 setup_type: "client"
 
 # Client configuration.
