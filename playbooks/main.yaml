@@ -65,11 +65,16 @@
       become: true
       ignore_errors: true
     - name: write wireguard public key to vault
-      community.hashi_vault.vault_kv2_write:
-        path: "wireguard/{{ inventory_hostname }}"
-        engine_mount_point: "mout.ch"
-        data:
-          public_key: "{{ wireguard_public_key['content'] | b64decode }}"
+      ansible.builtin.uri:
+        url: "{{ mout_vault_addr }}/v1/mout.ch/data/wireguard/{{ inventory_hostname }}"
+        method: POST
+        headers:
+          X-Vault-Token: "{{ mout_vault_token }}"
+        body_format: json
+        body:
+          data:
+            public_key: "{{ wireguard_public_key['content'] | b64decode }}"
+        validate_certs: false
       delegate_to: localhost
       ignore_errors: true
 
@@ -261,6 +266,22 @@
       args:
         creates: /opt/k8s_venv/bin/kubernetes
 
+    - name: Create Vault operator token
+      ansible.builtin.uri:
+        url: "{{ mout_vault_addr }}/v1/auth/token/create"
+        method: POST
+        headers:
+          X-Vault-Token: "{{ mout_vault_token }}"
+        body_format: json
+        body:
+          policies:
+            - vault-secrets-operator
+          ttl: 24h
+        validate_certs: false
+      register: vault_operator_token
+      delegate_to: localhost
+      no_log: true
+
     - name: Create and inject Vault operator token in k3s
       vars:
         ansible_python_interpreter: /opt/k8s_venv/bin/python
@@ -278,7 +299,7 @@
             namespace: vault-operator
           type: Opaque
           data:
-            VAULT_TOKEN: "{{ lookup('community.hashi_vault.vault_token_create', ttl='24h', policies=['vault-secrets-operator'], validate_certs=false).auth.client_token | b64encode }}"
+            VAULT_TOKEN: "{{ vault_operator_token.json.auth.client_token | b64encode }}"
             VAULT_TOKEN_LEASE_DURATION: "{{ 86400 | b64encode }}"
 
 
@@ -335,14 +356,20 @@
         k3s_kubeconfig: "{{ k3s_kubeconfig_raw.content | b64decode | from_yaml }}"
 
     - name: Write k3s_kubeconfig to vault
-      community.hashi_vault.vault_kv2_write:
-        path: "k3s/{{ inventory_hostname }}"
-        engine_mount_point: "mout.ch"
-        data:
-          ca: "{{ k3s_kubeconfig.clusters[0].cluster['certificate-authority-data'] | b64decode }}"
-          cert: "{{ k3s_kubeconfig.users[0].user['client-certificate-data'] | b64decode }}"
-          key: "{{ k3s_kubeconfig.users[0].user['client-key-data'] | b64decode }}"
+      ansible.builtin.uri:
+        url: "{{ mout_vault_addr }}/v1/mout.ch/data/k3s/{{ inventory_hostname }}"
+        method: POST
+        headers:
+          X-Vault-Token: "{{ mout_vault_token }}"
+        body_format: json
+        body:
+          data:
+            ca: "{{ k3s_kubeconfig.clusters[0].cluster['certificate-authority-data'] | b64decode }}"
+            cert: "{{ k3s_kubeconfig.users[0].user['client-certificate-data'] | b64decode }}"
+            key: "{{ k3s_kubeconfig.users[0].user['client-key-data'] | b64decode }}"
+        validate_certs: false
       delegate_to: localhost
+      no_log: true
       ignore_errors: true
 
 - hosts: theater-1.magstatt.infra.mout.ch

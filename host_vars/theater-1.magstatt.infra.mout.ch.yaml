@@ -21,7 +21,7 @@ client_accessible_ips: "192.168.10.0/24,192.168.14.0/24"
 
 # Server configuration.
 server_public_ip: gate-1.blotzheim.infra.mout.ch
-server_public_key: "{{ lookup('community.hashi_vault.hashi_vault', 'mout.ch/data/wireguard/gate-1.blotzheim.infra.mout.ch', validate_certs=false)['public_key'] }}"
+server_public_key: "{{ (lookup('ansible.builtin.url', mout_vault_addr ~ '/v1/mout.ch/data/wireguard/gate-1.blotzheim.infra.mout.ch', headers={'X-Vault-Token': mout_vault_token}, split_lines=false, validate_certs=false) | from_json).data.data['public_key'] }}"
 
 # Network
 netplan_enabled: true

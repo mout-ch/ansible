@@ -385,13 +385,13 @@ interfaces:
         allowed_ips: 192.168.10.2/32
         persistent_keepalive: 25
         port: 51820
-        public_key: "{{ lookup('community.hashi_vault.hashi_vault', 'mout.ch/data/wireguard/gate-1.ovh.infra.mout.ch', validate_certs=false)['public_key'] }}"
+        public_key: "{{ (lookup('ansible.builtin.url', mout_vault_addr ~ '/v1/mout.ch/data/wireguard/gate-1.ovh.infra.mout.ch', headers={'X-Vault-Token': mout_vault_token}, split_lines=false, validate_certs=false) | from_json).data.data['public_key'] }}"
       theater-1.magstatt:
         allowed_ips: 192.168.10.3/32
         persistent_keepalive: 25
-        public_key: "{{ lookup('community.hashi_vault.hashi_vault', 'mout.ch/data/wireguard/theater-1.magstatt.infra.mout.ch', validate_certs=false)['public_key'] }}"
+        public_key: "{{ (lookup('ansible.builtin.url', mout_vault_addr ~ '/v1/mout.ch/data/wireguard/theater-1.magstatt.infra.mout.ch', headers={'X-Vault-Token': mout_vault_token}, split_lines=false, validate_certs=false) | from_json).data.data['public_key'] }}"
     port: 51820
-    private_key: "{{ lookup('community.hashi_vault.hashi_vault', 'mout.ch/data/wireguard/gate-1.blotzheim.infra.mout.ch', validate_certs=false)['private_key'] }}"
+    private_key: "{{ (lookup('ansible.builtin.url', mout_vault_addr ~ '/v1/mout.ch/data/wireguard/gate-1.blotzheim.infra.mout.ch', headers={'X-Vault-Token': mout_vault_token}, split_lines=false, validate_certs=false) | from_json).data.data['private_key'] }}"
     units:
       0:
         family:

@@ -10,7 +10,6 @@ package-mode = false
 python = ">=3.9,<3.12"
 # napalm 4.1 still imports pkg_resources, removed from recent setuptools
 setuptools = "<81"
-hvac = "^1.0.0"
 jmespath = "^1.0.0"
 netaddr = "^0.8.0"
 napalm = "^4.1.0"

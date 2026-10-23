@@ -46,3 +46,8 @@ vault_backend: raft
 vault_listener_localhost_enable: true
 vault_tls_src_files: ../files
 vault_raft_group_name: vault
+
+# Vault HTTP API, used from the controller (VAULT_ADDR / VAULT_TOKEN or ~/.vault-token)
+# Not named vault_addr: that one belongs to the ansible-vault role
+mout_vault_addr: "{{ lookup('ansible.builtin.env', 'VAULT_ADDR') }}"
+mout_vault_token: "{{ lookup('ansible.builtin.env', 'VAULT_TOKEN') or lookup('ansible.builtin.file', lookup('ansible.builtin.env', 'HOME') ~ '/.vault-token', errors='ignore') }}"
