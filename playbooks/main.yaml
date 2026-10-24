@@ -41,45 +41,8 @@
     - prometheus.prometheus.node_exporter
 
 # One node at a time: a restarted node comes back sealed (shamir), and two
-# sealed nodes means no raft quorum. Run with --limit, standbys first.
-- hosts: vault:!openbao
-  serial: 1
-  any_errors_fatal: true
-  tags: vault
-  pre_tasks:
-    - name: Gather service facts
-      ansible.builtin.service_facts:
-
-    # Rolling back a node from OpenBao: both listen on 8200
-    - name: Stop and disable OpenBao
-      ansible.builtin.systemd:
-        name: openbao
-        state: stopped
-        enabled: false
-      when: "'openbao.service' in ansible_facts.services"
-
-    # The raft config template needs facts of every peer, even under --limit
-    - name: Gather facts of all raft peers
-      ansible.builtin.setup:
-      delegate_to: "{{ item }}"
-      delegate_facts: true
-      loop: "{{ groups[vault_raft_group_name] }}"
-      run_once: true
-  roles:
-    - ansible-community.ansible-vault
-  post_tasks:
-    - name: Wait for the node to be unsealed (run `vault operator unseal` now if restarted)
-      ansible.builtin.uri:
-        url: "{{ 'http' if vault_tls_disable | bool else 'https' }}://127.0.0.1:8200/v1/sys/health?standbyok=true"
-        status_code: [200, 503]
-      register: vault_health
-      until: vault_health.status == 200
-      retries: 90
-      delay: 10
-
-# Vault -> OpenBao, one node at a time (see openbao_* in group_vars/all.yaml).
-# The node joins the cluster with an empty data dir through retry_join,
-# then gets unsealed with the existing keys.
+# sealed nodes means no raft quorum. Run with --limit, standbys first, see
+# docs/openbao/upgrade.md.
 - hosts: openbao
   serial: 1
   any_errors_fatal: true
@@ -89,7 +52,8 @@
     - name: Gather service facts
       ansible.builtin.service_facts:
 
-    # Both listen on 8200. /var/vault is left as is for a rollback.
+    # Leftovers of the Vault install replaced by OpenBao in October 2026,
+    # including its data in /var/vault: rollback goes through a snapshot
     - name: Stop and disable Vault
       ansible.builtin.systemd:
         name: vault
@@ -97,55 +61,34 @@
         enabled: false
       when: "'vault.service' in ansible_facts.services"
 
-  tasks:
-    - name: Install OpenBao {{ openbao_version }} from GitHub
-      when: openbao_version is version('2.5.0', '<')
-      block:
-        - name: Download OpenBao package
-          ansible.builtin.get_url:
-            url: "https://github.com/openbao/openbao/releases/download/v{{ openbao_version }}/bao_{{ openbao_version }}_linux_amd64.deb"
-            dest: "/tmp/bao_{{ openbao_version }}_linux_amd64.deb"
-            checksum: "sha256:https://github.com/openbao/openbao/releases/download/v{{ openbao_version }}/checksums-linux.txt"
-            mode: "0644"
+    - name: Remove Vault files
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /lib/systemd/system/vault.service
+        - /usr/local/bin/vault
+        - /usr/local/lib/vault
+        - /etc/vault.d
+        - /var/vault
+        - /var/log/vault
+        - /var/run/vault
+      register: vault_files
 
-        - name: Install OpenBao package
-          ansible.builtin.apt:
-            deb: "/tmp/bao_{{ openbao_version }}_linux_amd64.deb"
+    - name: Reload systemd after removing the Vault unit
+      ansible.builtin.systemd:
+        daemon_reload: true
+      when: vault_files is changed
 
-        - name: Create OpenBao data directory
-          ansible.builtin.file:
-            path: "{{ openbao_data_path }}"
-            state: directory
-            owner: openbao
-            group: openbao
-            mode: "0700"
+    - name: Remove Vault user
+      ansible.builtin.user:
+        name: vault
+        state: absent
+        remove: true
 
-        # bao 2.2.0 has no `operator validate-config`, unlike openbao_server
-        - name: Configure OpenBao
-          ansible.builtin.copy:
-            content: "{{ openbao_server_config }}"
-            dest: /etc/openbao/openbao.hcl
-            owner: openbao
-            group: openbao
-            mode: "0600"
-          register: openbao_config
-
-        - name: Start OpenBao
-          ansible.builtin.systemd:
-            name: openbao
-            state: "{{ 'restarted' if openbao_config is changed else 'started' }}"
-            enabled: true
-            daemon_reload: true
-
-    - name: Install OpenBao {{ openbao_version }} from the APT repository
-      ansible.builtin.include_role:
-        name: robertdebock.openbao
-      when: openbao_version is version('2.5.0', '>=')
-
-    - name: Configure OpenBao
-      ansible.builtin.include_role:
-        name: robertdebock.openbao_server
-      when: openbao_version is version('2.5.0', '>=')
+  roles:
+    - robertdebock.openbao
+    - robertdebock.openbao_server
 
   post_tasks:
     - name: Run pending OpenBao restarts
@@ -156,6 +99,8 @@
         url: "http://127.0.0.1:8200/v1/sys/health?standbyok=true&sealedcode=200&uninitcode=200"
       register: openbao_running
       failed_when: false
+      # Read-only, keeps --check from predicting a restart
+      check_mode: false
 
     # A package upgrade replaces the binary but leaves the old process running
     - name: Restart OpenBao to run {{ openbao_version }}
@@ -166,12 +111,13 @@
 
     - name: Wait for the node to be unsealed (run `bao operator unseal` now)
       ansible.builtin.uri:
-        url: "http://127.0.0.1:8200/v1/sys/health?standbyok=true"
-        status_code: [200, 501, 503]
+        url: "{{ 'http' if openbao_tls_disable | bool else 'https' }}://127.0.0.1:8200/v1/sys/health?standbyok=true"
+        status_code: [200, 503]
       register: openbao_health
       until: openbao_health.status == 200
       retries: 90
       delay: 10
+      check_mode: false
 
 - hosts: gate
   tags: ip_forward
@@ -472,31 +418,6 @@
                   mout.ch/restarted-at: "{{ now(utc=true).isoformat() }}"
       when: vault_operator_secret.changed
 
-
-  # tasks:
-  #   - name: Install pip3
-  #     apt:
-  #       name: python3-pip
-  #       state: present
-  #       update_cache: true
-  #   - name: install kubernetes python on host
-  #     pip:
-  #       name: kubernetes
-  #       state: present
-  #   - name: Create and inject vault operator token in k3s
-  #     kubernetes.core.k8s:
-  #       state: present
-  #       kubeconfig: /etc/rancher/k3s/k3s.yaml
-  #       definition:
-  #         apiVersion: v1
-  #         kind: Secret
-  #         metadata:
-  #           name: vault-secrets-operator
-  #           namespace: vault-operator
-  #         type: Opaque
-  #         data:
-  #           VAULT_TOKEN: "{{ lookup('community.hashi_vault.vault_token_create', ttl='24h', policies=['vault-secrets-operator'], validate_certs=false).auth.client_token | b64encode }}"
-  #           VAULT_TOKEN_LEASE_DURATION: "{{ 86400 | b64encode }}"
 
 - hosts: theater-1.magstatt.infra.mout.ch
   tags: folders

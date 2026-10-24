@@ -48,7 +48,7 @@
             pre-commit
             shellcheck
             terraform
-            vault
+            openbao
             velero
           ];
 

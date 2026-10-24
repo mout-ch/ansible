@@ -51,13 +51,24 @@ standby`, same raft index as the others.
 
 ## 4. Step down the leader
 
+Run the step-down **once**:
+
 ```bash
 curl -s -X PUT -H "X-Vault-Token: $VAULT_TOKEN" "$VAULT_ADDR/v1/sys/step-down" -w "%{http_code}\n"   # 204
+```
+
+Then check the leader, retrying only this command if the API refuses requests
+during the election:
+
+```bash
 curl -s -H "X-Vault-Token: $VAULT_TOKEN" "$VAULT_ADDR/v1/sys/storage/raft/configuration" | jq -r '.data.config.servers[] | select(.leader) | .node_id'
 ```
 
-The new leader must be one of the nodes already upgraded. The API may refuse
-requests for a few seconds during the election, retry if needed.
+The new leader must be one of the nodes already upgraded. Do not send a second
+step-down to "make sure": it lands on the new leader and hands leadership back
+to the old version (happened during the 2.7.1 upgrade, the old node failed its
+setup with `check-and-set parameter did not match` and gave it back after ~10s).
+Only step down again if the old node is still leader after 30 seconds.
 
 ## 5. Upgrade the former leader
 
