@@ -2,6 +2,8 @@
 
 Ansible configuration for all mout.ch infrastructure. Description to be completed.
 
+Runbooks: [OpenBao](docs/openbao/README.md) ([upgrade](docs/openbao/upgrade.md))
+
 
 # VPN
 

@@ -2,3 +2,6 @@ ansible-galaxy
 .vscode/
 diff
 .DS_Store
+
+# Vault/OpenBao raft snapshots: keep them out of the repo
+*.snap

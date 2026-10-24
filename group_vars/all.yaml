@@ -44,13 +44,57 @@ consul_version: 1.11.2
 # The role reinstalls whenever this differs from the installed binary:
 # never lower it once a step is done.
 # Path: 1.5.5 -> 1.10.11 -> 1.14.1 -> OpenBao 2.2.0 -> 2.5.x -> 2.7.x
-vault_version: 1.10.11
+vault_version: 1.14.1
 #vault_iface: lo
 vault_tls_disable: false
 vault_backend: raft
 vault_listener_localhost_enable: true
 vault_tls_src_files: ../files
 vault_raft_group_name: vault
+
+### OpenBao
+# Replaces Vault node by node: add the host to [openbao] in the inventory,
+# then run --tags openbao --limit <host>. Followers first, leader last.
+# 2.2.0 is the target tested by the migration guide (from Vault 1.14.1). It
+# predates pkgs.openbao.org, so it comes from the GitHub .deb (named "bao").
+openbao_version: "2.7.1"
+openbao_validate_certs: true
+# Not /opt/openbao/data: the package's default config uses it for file storage
+openbao_data_path: /opt/openbao/raft
+openbao_server_directories:
+  - "{{ openbao_data_path }}"
+# Same as the Vault config, minus disable_mlock (gone since OpenBao 2.0)
+# and with a new data path, so /var/vault stays untouched for a rollback
+openbao_server_config: |
+  cluster_name = "dc1"
+  max_lease_ttl = "768h"
+  default_lease_ttl = "768h"
+  cluster_addr = "http://{{ ansible_facts['default_ipv4']['address'] }}:8201"
+  api_addr = "{{ 'http' if vault_tls_disable | bool else 'https' }}://{{ fqdn }}:8200"
+  ui = true
+
+  listener "tcp" {
+    address = "{{ ansible_facts['default_ipv4']['address'] }}:8200"
+    cluster_address = "{{ ansible_facts['default_ipv4']['address'] }}:8201"
+    tls_disable = "true"
+  }
+
+  listener "tcp" {
+    address = "127.0.0.1:8200"
+    cluster_address = "127.0.0.1:8201"
+    tls_disable = "true"
+  }
+
+  storage "raft" {
+    path = "{{ openbao_data_path }}"
+    node_id = "{{ inventory_hostname_short }}"
+  {% for peer in groups['vault'] if peer != inventory_hostname %}
+
+    retry_join {
+      leader_api_addr = "{{ 'http' if hostvars[peer]['vault_tls_disable'] | bool else 'https' }}://{{ hostvars[peer]['fqdn'] }}:8200"
+    }
+  {% endfor %}
+  }
 
 # Vault HTTP API, used from the controller (VAULT_ADDR / VAULT_TOKEN or ~/.vault-token)
 # Not named vault_addr: that one belongs to the ansible-vault role

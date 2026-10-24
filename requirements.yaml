@@ -95,6 +95,14 @@ roles:
     scm: git
     version: 5824649b56759967cd2a8ba7ef4ada840347e5e8 # v2.5.2, renders the current config unchanged
 
+  - src: git+https://github.com/robertdebock/ansible-role-openbao.git
+    name: robertdebock.openbao
+    version: 1f21e4800d07aceec0c4ef039ecc1913bd874371
+
+  - src: git+https://github.com/robertdebock/ansible-role-openbao_server.git
+    name: robertdebock.openbao_server
+    version: 6d56c2997ffaaef01b898b448bee35e3a82360cb
+
   - src: https://gitlab.com/consensus.enterprises/ansible-roles/ansible-role-wireguard-cloud-gateway.git
     name: consensus.wireguard_cloud_gateway
     scm: git

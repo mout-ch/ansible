@@ -23,6 +23,13 @@ hv-1.blotzheim.infra.mout.ch
 [vault:children]
 ceph
 
+# Vault nodes already migrated to OpenBao: add them one at a time,
+# followers first (see openbao_* in group_vars/all.yaml)
+[openbao]
+ceph-3.blotzheim.infra.mout.ch
+ceph-1.blotzheim.infra.mout.ch
+ceph-2.blotzheim.infra.mout.ch
+
 [vyos]
 gate-1.blotzheim.infra.mout.ch ansible_port=22 ansible_user=vyos ansible_network_os=vyos
 
