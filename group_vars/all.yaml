@@ -44,7 +44,7 @@ consul_version: 1.11.2
 # The role reinstalls whenever this differs from the installed binary:
 # never lower it once a step is done.
 # Path: 1.5.5 -> 1.10.11 -> 1.14.1 -> OpenBao 2.2.0 -> 2.5.x -> 2.7.x
-vault_version: 1.5.5
+vault_version: 1.10.11
 #vault_iface: lo
 vault_tls_disable: false
 vault_backend: raft

@@ -59,7 +59,7 @@
   post_tasks:
     - name: Wait for the node to be unsealed (run `vault operator unseal` now if restarted)
       ansible.builtin.uri:
-        url: "{{ vault_api_addr }}/v1/sys/health?standbyok=true"
+        url: "{{ 'http' if vault_tls_disable | bool else 'https' }}://127.0.0.1:8200/v1/sys/health?standbyok=true"
         status_code: [200, 503]
       register: vault_health
       until: vault_health.status == 200
