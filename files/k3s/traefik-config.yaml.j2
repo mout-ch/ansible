@@ -1,0 +1,16 @@
+---
+# Customizes the traefik chart packaged with k3s: merged on top of its values,
+# so it survives k3s restarts and upgrades. Don't ship a copy of k3s' own
+# traefik.yaml instead, k3s rewrites that file on every start.
+apiVersion: helm.cattle.io/v1
+kind: HelmChartConfig
+metadata:
+  name: traefik
+  namespace: kube-system
+spec:
+  valuesContent: |-
+    service:
+      spec:
+        # gate-1.blotzheim forwards 80, 443 and 6443 to this address
+        externalIPs:
+          - 192.168.13.11
