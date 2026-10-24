@@ -93,7 +93,7 @@ roles:
   - src: https://github.com/ansible-community/ansible-vault.git
     name: ansible-community.ansible-vault
     scm: git
-    version: c723ec5e3e068a90b316162d19ef2269f99dc11b
+    version: 5824649b56759967cd2a8ba7ef4ada840347e5e8 # v2.5.2, renders the current config unchanged
 
   - src: https://gitlab.com/consensus.enterprises/ansible-roles/ansible-role-wireguard-cloud-gateway.git
     name: consensus.wireguard_cloud_gateway

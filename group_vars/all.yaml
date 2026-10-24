@@ -40,6 +40,11 @@ consul_connect_enabled: true
 consul_version: 1.11.2
 
 ### Vault
+# Bump one step at a time during the upgrade, standbys first.
+# The role reinstalls whenever this differs from the installed binary:
+# never lower it once a step is done.
+# Path: 1.5.5 -> 1.10.11 -> 1.14.1 -> OpenBao 2.2.0 -> 2.5.x -> 2.7.x
+vault_version: 1.5.5
 #vault_iface: lo
 vault_tls_disable: false
 vault_backend: raft
@@ -49,5 +54,5 @@ vault_raft_group_name: vault
 
 # Vault HTTP API, used from the controller (VAULT_ADDR / VAULT_TOKEN or ~/.vault-token)
 # Not named vault_addr: that one belongs to the ansible-vault role
-mout_vault_addr: "{{ lookup('ansible.builtin.env', 'VAULT_ADDR') }}"
+mout_vault_addr: "{{ lookup('ansible.builtin.env', 'VAULT_ADDR') | regex_replace('/+$', '') }}"
 mout_vault_token: "{{ lookup('ansible.builtin.env', 'VAULT_TOKEN') or lookup('ansible.builtin.file', lookup('ansible.builtin.env', 'HOME') ~ '/.vault-token', errors='ignore') }}"

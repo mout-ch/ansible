@@ -40,10 +40,31 @@
   roles:
     - prometheus.prometheus.node_exporter
 
+# One node at a time: a restarted node comes back sealed (shamir), and two
+# sealed nodes means no raft quorum. Run with --limit, standbys first.
 - hosts: vault
+  serial: 1
+  any_errors_fatal: true
+  tags: vault
+  pre_tasks:
+    # The raft config template needs facts of every peer, even under --limit
+    - name: Gather facts of all raft peers
+      ansible.builtin.setup:
+      delegate_to: "{{ item }}"
+      delegate_facts: true
+      loop: "{{ groups[vault_raft_group_name] }}"
+      run_once: true
   roles:
     - ansible-community.ansible-vault
-  tags: vault
+  post_tasks:
+    - name: Wait for the node to be unsealed (run `vault operator unseal` now if restarted)
+      ansible.builtin.uri:
+        url: "{{ vault_api_addr }}/v1/sys/health?standbyok=true"
+        status_code: [200, 503]
+      register: vault_health
+      until: vault_health.status == 200
+      retries: 90
+      delay: 10
 
 - hosts: gate
   tags: ip_forward
