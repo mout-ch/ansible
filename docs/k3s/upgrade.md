@@ -65,7 +65,15 @@ Re-check these when you get to a hop, newer patch releases may exist.
    ([playbooks/k3s-backup.yaml](../../playbooks/k3s-backup.yaml)), to
    `/var/lib/rancher/k3s/server/backup/<old version>-<date>/`. Then the role
    swaps the binary and restarts k3s; pods keep running during the restart.
-3. On blotzheim, same with `--limit gate-1.ovh.infra.mout.ch` afterwards.
+3. On blotzheim, then the agent, always together with its server:
+
+   ```bash
+   poetry run ansible-playbook playbooks/main.yaml --tags k3s --limit compute-2.blotzheim.infra.mout.ch,gate-1.ovh.infra.mout.ch
+   ```
+
+   Never `--limit gate-1.ovh.infra.mout.ch` alone: with no control node among
+   the play hosts, the role elects the first one as a server, and gate-1.ovh
+   comes up as a new standalone cluster (happened on 2026-10-28).
 4. Check (on the server):
 
    ```bash
