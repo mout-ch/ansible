@@ -94,6 +94,9 @@
   hosts: vyos
   gather_facts: no
   tags: build
+  vars:
+    # The local plays above cache the controller's interpreter for this host
+    ansible_python_interpreter: /usr/bin/python3
 
   tasks:
     - name: Check if FRR directory exists.

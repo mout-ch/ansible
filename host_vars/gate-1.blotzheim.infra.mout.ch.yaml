@@ -135,13 +135,12 @@ firewall_rules:
   "LAN_OUT":
     default_action: drop
     rules:
-      # Exception for gate-1.ovh.infra.mout.ch
-      - name: "accept_new"
+      # Wireguard peers (gate-1.ovh, theater-1, dieret)
+      - name: "accept_new_vpn"
         action: accept
         state: ["new"]
-        protocol: tcp
         source:
-          address: 192.168.10.2
+          address: 192.168.10.0/24
       - name: "accept_established"
         action: accept
         state: ["established", "related"]
@@ -362,17 +361,18 @@ interfaces:
             address:
               '192.168.15.1/24': {}
 
-  # eth5:
-  #   type: "ethernet"
-  #   description: "default"
-  #   hw_id: "52:54:00:8d:c1:7f"
-  #   mtu: 1500
-  #   units:
-  #     0:
-  #       family:
-  #         inet:
-  #           address:
-  #             '192.168.122.10/24': { }
+  # libvirt "default" network on hv-1, management access to the hypervisor
+  eth5:
+    type: "ethernet"
+    description: "default"
+    hw_id: "52:54:00:8d:c1:7f"
+    mtu: 1500
+    units:
+      0:
+        family:
+          inet:
+            address:
+              '192.168.122.10/24': { }
 
   # Wireguard
   wg01:
@@ -390,6 +390,11 @@ interfaces:
         allowed_ips: 192.168.10.3/32
         persistent_keepalive: 25
         public_key: "{{ (lookup('ansible.builtin.url', mout_vault_addr ~ '/v1/mout.ch/data/wireguard/theater-1.magstatt.infra.mout.ch', headers={'X-Vault-Token': mout_vault_token}, split_lines=false, validate_certs=false) | from_json).data.data['public_key'] }}"
+      # Not managed by this repo, public key taken over from the live config
+      dieret:
+        allowed_ips: 192.168.10.4/32
+        persistent_keepalive: 25
+        public_key: "7qsKS7mRqatx0Cdg5MnlUtSGhDQPl4QghMtSMyTV2mI="
     port: 51820
     private_key: "{{ (lookup('ansible.builtin.url', mout_vault_addr ~ '/v1/mout.ch/data/wireguard/gate-1.blotzheim.infra.mout.ch', headers={'X-Vault-Token': mout_vault_token}, split_lines=false, validate_certs=false) | from_json).data.data['private_key'] }}"
     units:

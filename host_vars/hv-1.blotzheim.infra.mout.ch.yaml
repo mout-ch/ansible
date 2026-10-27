@@ -177,6 +177,11 @@ kvm_vms:
         network_driver: virtio
         type: network
         mac: 52:54:00:7e:96:38
+      # Management access to the hypervisor (gate eth5, 192.168.122.10)
+      - source: default
+        network_driver: virtio
+        type: network
+        mac: 52:54:00:8d:c1:7f
     hostdevs:
       - alias: uplink
         type: pci
