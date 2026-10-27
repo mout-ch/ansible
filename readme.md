@@ -90,13 +90,10 @@ flowchart LR
 - hv-1.hirsingue sits on the Freebox LAN, not behind gate-1.hirsingue.
 
 
-Cilium install:
-```
-helm upgrade cilium cilium/cilium --namespace cilium \
-  --install \
-  --create-namespace \
-  --set kubeProxyReplacement=true \
-  --set operator.replicas=1 \
-  --set ipam.operator.clusterPoolIPv4PodCIDRList="10.42.0.0/16"
+## Cilium
 
-```
+Installed by k3s itself from [files/k3s/cilium.yaml.j2](files/k3s/cilium.yaml.j2)
+(a `HelmChart` with `bootstrap: true`, so it works on a fresh cluster before
+any CNI exists). Version and values per cluster: `cilium_version` and
+`cilium_values` in `host_vars`. Don't `helm upgrade` it by hand, bump the
+version there instead.

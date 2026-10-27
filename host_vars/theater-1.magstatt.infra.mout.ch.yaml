@@ -10,6 +10,19 @@ k3s_server:
     - "theater-1.magstatt.infra.mout.ch"
   disable:
     - local-storage
+k3s_server_manifests_templates:
+  - ../files/k3s/cilium.yaml.j2
+
+# Taken over from the release installed by hand (helm rev 1, Aug 2025)
+cilium_version: 1.16.1
+cilium_values:
+  containerRuntime:
+    integration: containerd
+    socketPath: /var/run/k3s/containerd/containerd.sock
+  # A string in the original release, kept as is
+  kubeProxyReplacement: "true"
+  operator:
+    enabled: true
 
 vault_operator_deployment: vault-operator-theater-1-vault-secrets-operator
 

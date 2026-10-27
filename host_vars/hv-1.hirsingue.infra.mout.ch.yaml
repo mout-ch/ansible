@@ -5,9 +5,28 @@ fqdn: hv-1.hirsingue.infra.mout.ch
 # Standalone cluster used as offsite backup target (S3 + backup cleanup)
 k3s_release_version: v1.28.1+k3s1
 k3s_server:
+  # Cilium is the CNI, installed through files/k3s/cilium.yaml.j2
+  flannel-backend: none
+  disable-network-policy: true
   tls-san:
     - "hv-1.hirsingue.infra.mout.ch"
   default-local-storage-path: /var/lib/volumes/backup/k3s-local-path
+k3s_server_manifests_templates:
+  - ../files/k3s/cilium.yaml.j2
+
+cilium_version: 1.16.19
+cilium_values:
+  kubeProxyReplacement: true
+  # API server address, reachable before the service network exists
+  k8sServiceHost: 192.168.1.67
+  k8sServicePort: 6443
+  operator:
+    replicas: 1
+  ipam:
+    operator:
+      # Same range as the k3s default cluster-cidr
+      clusterPoolIPv4PodCIDRList:
+        - 10.42.0.0/16
 
 # Network
 netplan_enabled: true

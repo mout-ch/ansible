@@ -6,25 +6,19 @@ metadata:
   labels:
     name: cilium
 ---
+# Installed by the k3s helm-controller. With bootstrap, the install job runs on
+# the host network and tolerates NotReady nodes, so it works on a fresh cluster
+# before any CNI exists (k3s runs with flannel-backend: none).
 apiVersion: helm.cattle.io/v1
 kind: HelmChart
 metadata:
   name: cilium
   namespace: kube-system
 spec:
-  chart: cilium/cilium
-  version: 1.14.3
+  bootstrap: true
+  chart: cilium
   repo: https://helm.cilium.io/
+  version: "{{ cilium_version }}"
   targetNamespace: cilium
   valuesContent: |-
-    operator:
-      enabled: true
-    global:
-      tag: "v1.14.3"
-    containerRuntime:
-      integration: "containerd"
-      socketPath: "/var/run/k3s/containerd/containerd.sock"
-    kubeProxyReplacement: "strict"
-
-    bgpControlPlane:
-      enabled: true
+    {{ cilium_values | to_nice_yaml(indent=2) | indent(4) }}

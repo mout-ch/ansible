@@ -28,3 +28,22 @@ k3s_server_manifests_templates:
   - ../files/k3s/root.yaml.j2
   - ../files/k3s/traefik-config.yaml.j2
 k3s_control_node: true
+
+# Taken over from the release installed by hand (helm rev 14, Feb 2024)
+cilium_version: 1.15.1
+cilium_values:
+  bgpControlPlane:
+    enabled: false
+  k8sClientRateLimit:
+    burst: 100
+    qps: 50
+  k8sServiceHost: 192.168.14.21
+  k8sServicePort: 6443
+  kubeProxyReplacement: true
+  l2announcements:
+    enabled: true
+    leaseDuration: 20s
+    leaseRenewDeadline: 15s
+    leaseRetryPeriod: 200ms
+  operator:
+    replicas: 1
