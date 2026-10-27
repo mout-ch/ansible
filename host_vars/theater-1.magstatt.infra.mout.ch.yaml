@@ -16,9 +16,6 @@ k3s_server_manifests_templates:
 # Taken over from the release installed by hand (helm rev 1, Aug 2025)
 cilium_version: 1.16.19
 cilium_values:
-  containerRuntime:
-    integration: containerd
-    socketPath: /var/run/k3s/containerd/containerd.sock
   # A string in the original release, kept as is
   kubeProxyReplacement: "true"
   operator:

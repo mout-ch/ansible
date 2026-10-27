@@ -84,22 +84,23 @@ lvm_groups:
         size: 500G
         create: true
 
-  - vgname: disk-9
-    disks:
-      - /dev/disk/by-id/scsi-SATA_WDC_WUH721414AL_9MJ84KRU
-    create: true
-    lvnames:
-      - lvname: ceph
-        size: 2T
-        create: true
-      - lvname: storj-3
-        size: 10T
-        create: true
-        filesystem: xfs
-        mount: false
-      - lvname: libvirt-root-images
-        size: 500G
-        create: true
+  # Dead since 2026-10-27 (medium errors, dropped off the bus), not used by ceph
+  # - vgname: disk-9
+  #   disks:
+  #     - /dev/disk/by-id/scsi-SATA_WDC_WUH721414AL_9MJ84KRU
+  #   create: true
+  #   lvnames:
+  #     - lvname: ceph
+  #       size: 2T
+  #       create: true
+  #     - lvname: storj-3
+  #       size: 10T
+  #       create: true
+  #       filesystem: xfs
+  #       mount: false
+  #     - lvname: libvirt-root-images
+  #       size: 500G
+  #       create: true
 
   - vgname: disk-2
     disks:
@@ -451,26 +452,6 @@ kvm_vms:
         size: 102400
         backing_file: https://cloud-images.ubuntu.com/jammy/20231027/jammy-server-cloudimg-amd64.img
         backing_file_format: qcow2
-      - disk_driver: virtio
-        name: storj
-        type: block
-        path: /dev/disk-0/storj-0
-        serial: storj-0
-      - disk_driver: virtio
-        name: storj
-        type: block
-        path: /dev/disk-3/storj-1
-        serial: storj-1
-      - disk_driver: virtio
-        name: storj
-        type: block
-        path: /dev/disk-6/storj-2
-        serial: storj-2
-      - disk_driver: virtio
-        name: storj
-        type: block
-        path: /dev/disk-9/storj-3
-        serial: storj-3
     network_interfaces:
       - source: lan
         network_driver: virtio
