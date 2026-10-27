@@ -189,21 +189,18 @@
       - storj-1
       - storj-2
       - storj-3
+  # storj is abandoned: unmount and drop the fstab entries, then remove this play
   tasks:
-    - name: Ensure data folder exist
-      file:
-        path: "/mnt/{{ item }}"
-        state: directory
-      become: yes
-      loop: "{{ volumes }}"
-
-    - name: Mount compute-2-data volume
+    - name: Unmount storj volumes and remove them from fstab
       mount:
         path: "/mnt/{{ item }}"
-        src: "/dev/disk/by-id/virtio-{{ item }}"
-        state: mounted
-        opts: defaults
-        fstype: xfs
+        state: absent
+      loop: "{{ volumes }}"
+
+    - name: Remove storj mount points
+      file:
+        path: "/mnt/{{ item }}"
+        state: absent
       loop: "{{ volumes }}"
 
 - hosts: k3s, gate-1.ovh.infra.mout.ch, theater-1.magstatt.infra.mout.ch

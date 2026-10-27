@@ -30,7 +30,7 @@ k3s_server_manifests_templates:
 k3s_control_node: true
 
 # Taken over from the release installed by hand (helm rev 14, Feb 2024)
-cilium_version: 1.15.19
+cilium_version: 1.16.19
 cilium_values:
   bgpControlPlane:
     enabled: false
