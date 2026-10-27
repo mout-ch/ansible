@@ -133,7 +133,7 @@ roles:
 
   - src: git+https://github.com/rootmout/ansible-kvm.git
     name: rootmout.kvm
-    version: 7cad2bc4e59cadd8de6cd20e4bb07fccdfdb2b1e
+    version: 04d1c0e46e86f72f429e2619d22c1b695d27cf57
 
   - src: git+https://github.com/robertdebock/ansible-role-grub.git
     name: robertdebock.grub

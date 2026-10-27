@@ -439,6 +439,8 @@ kvm_vms:
     state: running
     memory: 16384
     vcpu: 8
+    # Recent images (ceph-csi 3.14, numpy) need at least x86-64-v2
+    cpu_mode: host-passthrough
     graphics: false
     boot_devices:
       - hd
