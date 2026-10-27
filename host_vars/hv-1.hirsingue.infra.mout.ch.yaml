@@ -3,7 +3,7 @@ fqdn: hv-1.hirsingue.infra.mout.ch
 
 # K3s
 # Standalone cluster used as offsite backup target (S3 + backup cleanup)
-k3s_release_version: v1.28.1+k3s1
+k3s_release_version: v1.29.15+k3s1
 k3s_server:
   # Cilium is the CNI, installed through files/k3s/cilium.yaml.j2
   flannel-backend: none

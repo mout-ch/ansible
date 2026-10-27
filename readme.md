@@ -2,7 +2,7 @@
 
 Ansible configuration for all mout.ch infrastructure. Description to be completed.
 
-Runbooks: [OpenBao](docs/openbao/README.md) ([upgrade](docs/openbao/upgrade.md))
+Runbooks: [OpenBao](docs/openbao/README.md) ([upgrade](docs/openbao/upgrade.md)), [k3s upgrade](docs/k3s/upgrade.md)
 
 
 # Network
@@ -97,3 +97,16 @@ Installed by k3s itself from [files/k3s/cilium.yaml.j2](files/k3s/cilium.yaml.j2
 any CNI exists). Version and values per cluster: `cilium_version` and
 `cilium_values` in `host_vars`. Don't `helm upgrade` it by hand, bump the
 version there instead.
+
+
+## ArgoCD
+
+Installed by k3s from [files/k3s/argocd.yaml.j2](files/k3s/argocd.yaml.j2)
+(a `HelmChart` for the upstream `argo-cd` chart). Version and values per
+cluster: `argocd_chart_version` and `argocd_values` in `host_vars`. ArgoCD does
+not manage itself: there is no `argo-cd` Application in the k8s repo, bump the
+version here instead. The `root` Application ([files/k3s/root.yaml.j2](files/k3s/root.yaml.j2))
+then deploys everything else from gitlab.com/mout.ch/k8s.
+
+The ArgoCD on compute-2 also manages theater-1. hv-1.hirsingue will get its own,
+isolated one since it holds the backups.

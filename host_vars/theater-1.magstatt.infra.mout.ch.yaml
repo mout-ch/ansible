@@ -1,7 +1,7 @@
 ---
 fqdn: theater-1.magstatt.infra.mout.ch
 
-k3s_release_version: v1.28.1+k3s1
+k3s_release_version: v1.29.15+k3s1
 k3s_server:
   flannel-backend: none
   disable-network-policy: true
@@ -14,7 +14,7 @@ k3s_server_manifests_templates:
   - ../files/k3s/cilium.yaml.j2
 
 # Taken over from the release installed by hand (helm rev 1, Aug 2025)
-cilium_version: 1.16.1
+cilium_version: 1.16.19
 cilium_values:
   containerRuntime:
     integration: containerd
@@ -23,6 +23,8 @@ cilium_values:
   kubeProxyReplacement: "true"
   operator:
     enabled: true
+    # Single node: the default second replica can never be scheduled
+    replicas: 1
 
 vault_operator_deployment: vault-operator-theater-1-vault-secrets-operator
 

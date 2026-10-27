@@ -1,0 +1,58 @@
+---
+# Backs up the k3s datastore before k3s_release_version changes, so a failed
+# upgrade can be rolled back (see docs/k3s/upgrade.md). Servers only, agents
+# have no datastore.
+- name: Check for a k3s datastore
+  ansible.builtin.stat:
+    path: /var/lib/rancher/k3s/server/db/state.db
+  register: k3s_backup_db
+
+- name: Get the installed k3s version
+  ansible.builtin.command: /usr/local/bin/k3s --version
+  register: k3s_backup_installed
+  changed_when: false
+  check_mode: false
+  when: k3s_backup_db.stat.exists
+
+- name: Back up the datastore before upgrading
+  when:
+    - k3s_backup_db.stat.exists
+    - k3s_release_version not in k3s_backup_installed.stdout
+  vars:
+    k3s_backup_dir: "/var/lib/rancher/k3s/server/backup/{{ k3s_backup_installed.stdout.split()[2] }}-{{ ansible_date_time.iso8601_basic_short }}"
+  block:
+    - name: Create the backup directory
+      ansible.builtin.file:
+        path: "{{ k3s_backup_dir }}"
+        state: directory
+        mode: "0700"
+
+    # sqlite online backup: consistent while k3s keeps running
+    - name: Back up state.db
+      ansible.builtin.command:
+        argv:
+          - python3
+          - -c
+          - |
+            import sqlite3, sys
+            src = sqlite3.connect(sys.argv[1])
+            dst = sqlite3.connect(sys.argv[2])
+            src.backup(dst)
+            dst.close()
+          - /var/lib/rancher/k3s/server/db/state.db
+          - "{{ k3s_backup_dir }}/state.db"
+        creates: "{{ k3s_backup_dir }}/state.db"
+
+    # Restoring state.db needs the same CA and token
+    - name: Back up certificates and token
+      community.general.archive:
+        path:
+          - /var/lib/rancher/k3s/server/tls
+          - /var/lib/rancher/k3s/server/cred
+          - /var/lib/rancher/k3s/server/token
+        dest: "{{ k3s_backup_dir }}/server.tar.gz"
+        mode: "0600"
+
+    - name: Show where the backup is
+      ansible.builtin.debug:
+        msg: "k3s {{ k3s_backup_installed.stdout.split()[2] }} backed up to {{ k3s_backup_dir }}"

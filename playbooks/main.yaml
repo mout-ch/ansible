@@ -208,6 +208,8 @@
 
 - hosts: k3s, gate-1.ovh.infra.mout.ch, theater-1.magstatt.infra.mout.ch
   tags: k3s
+  pre_tasks:
+    - ansible.builtin.import_tasks: k3s-backup.yaml
   roles:
      - role: xanmanning.k3s
 
@@ -266,6 +268,8 @@
 
 - hosts: backup
   tags: k3s
+  pre_tasks:
+    - ansible.builtin.import_tasks: k3s-backup.yaml
   roles:
      - role: xanmanning.k3s
 

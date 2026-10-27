@@ -14,7 +14,7 @@ server_public_key: "{{ (lookup('ansible.builtin.url', mout_vault_addr ~ '/v1/mou
 
 # Not in the k3s group: without this the role installs the "stable" channel,
 # newer than the server it joins. Keep it <= the server version.
-k3s_release_version: v1.28.6+k3s2
+k3s_release_version: v1.29.15+k3s1
 k3s_registration_address: 192.168.14.21
 k3s_control_token: "{{ (lookup('ansible.builtin.url', mout_vault_addr ~ '/v1/mout.ch/data/k3s/token', headers={'X-Vault-Token': mout_vault_token}, split_lines=false, validate_certs=false) | from_json).data.data['token'] }}"
 k3s_control_node: false

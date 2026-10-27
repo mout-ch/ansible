@@ -5,8 +5,9 @@ metadata:
   name: argocd
   labels:
     name: argocd
-
 ---
+# ArgoCD is installed by k3s from here, not by an ArgoCD Application managing
+# itself: bump argocd_chart_version in host_vars to upgrade it.
 apiVersion: helm.cattle.io/v1
 kind: HelmChart
 metadata:
@@ -14,34 +15,8 @@ metadata:
   namespace: kube-system
 spec:
   chart: argo-cd
-  version: 5.46.0
   repo: https://argoproj.github.io/argo-helm
+  version: "{{ argocd_chart_version }}"
   targetNamespace: argocd
   valuesContent: |-
-    dex:
-      enabled: false
-    server:
-      extraArgs:
-        - --insecure
-      config:
-        repositories: |
-          - type: helm
-            name: stable
-            url: https://charts.helm.sh/stable
-          - type: helm
-            name: argo-cd
-            url: https://argoproj.github.io/argo-helm
-      ingress:
-        enabled: true
-        annotations:
-          cert-manager.io/cluster-issuer: letsencrypt-staging
-          kubernetes.io/ingress.class: traefik
-          traefik.ingress.kubernetes.io/router.middlewares: kube-system-redirect-https@kubernetescrd
-        hosts:
-          - argocd.infra.mout.ch
-        tls:
-          - hosts:
-              - argocd.infra.mout.ch
-            secretName: argocd.infra.mout.ch-tls
-      applicationSet:
-        enabled: true
+    {{ argocd_values | to_nice_yaml(indent=2) | indent(4) }}
