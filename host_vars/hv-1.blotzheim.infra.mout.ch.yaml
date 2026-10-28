@@ -242,6 +242,8 @@ kvm_vms:
     state: running
     memory: 8192
     vcpu: 4
+    # Ceph Squid images need at least x86-64-v2
+    cpu_mode: host-passthrough
     graphics: false
     boot_devices:
       - hd
@@ -308,6 +310,8 @@ kvm_vms:
     state: running
     memory: 8192
     vcpu: 4
+    # Ceph Squid images need at least x86-64-v2
+    cpu_mode: host-passthrough
     graphics: false
     boot_devices:
       - hd
@@ -374,6 +378,8 @@ kvm_vms:
     state: running
     memory: 8192
     vcpu: 4
+    # Ceph Squid images need at least x86-64-v2
+    cpu_mode: host-passthrough
     graphics: false
     boot_devices:
       - hd
