@@ -4,3 +4,22 @@ ceph_tools_install_ceph: false
 
 # Image the daemons run, applied by playbooks/ceph-upgrade.yaml
 ceph_image: quay.io/ceph/ceph:v19.2.7
+
+### Rook in external mode, see the rook-ceph tag of playbooks/main.yaml
+# KV v2 secret read by apps/rook-ceph-external in the k8s repo
+rook_vault_mount: apps
+rook_vault_path: rook-ceph
+rook_healthchecker_user: client.healthchecker
+# Caps given by create-external-cluster-resources.py of Rook v1.21.1
+rook_healthchecker_caps:
+  mon: allow r, allow command quorum_status, allow command version
+  mgr: allow command config
+  osd: profile rbd-read-only, allow rwx pool=default.rgw.meta, allow r pool=.rgw.root, allow rw pool=default.rgw.control, allow rx pool=default.rgw.log, allow x pool=default.rgw.buckets.index
+  mds: allow *
+rook_rgw_admin_uid: rgw-admin-ops-user
+rook_rgw_admin_caps:
+  - buckets=*
+  - users=*
+  - usage=read
+  - metadata=read
+  - zone=read

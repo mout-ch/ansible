@@ -197,6 +197,115 @@
         state: latest
         only_upgrade: true
 
+# Credentials of Rook in external mode (S3 buckets only), read by the
+# rook-ceph-external app of the k8s repo from Vault. Never touch client.k3s:
+# ceph-csi mounts with krbd, which needs its current key type.
+- hosts: ceph
+  tags: rook-ceph
+  run_once: true
+  gather_facts: false
+  vars:
+    rook_vault_url: "{{ mout_vault_addr }}/v1/{{ rook_vault_mount }}/data/{{ rook_vault_path }}"
+  tasks:
+    - name: Get the healthchecker user
+      ansible.builtin.command: ceph auth get {{ rook_healthchecker_user }} --format json
+      register: rook_healthchecker
+      changed_when: false
+      failed_when: rook_healthchecker.rc not in [0, 2]
+      check_mode: false
+      no_log: true
+
+    # get-or-create fails on an existing user with other caps, so align them apart
+    - name: Create the healthchecker user
+      ansible.builtin.command:
+        argv: "{{ ['ceph', 'auth', 'get-or-create', rook_healthchecker_user] + (rook_healthchecker_caps.items() | list | flatten) }}"
+      when: rook_healthchecker.rc != 0
+      no_log: true
+
+    - name: Align the healthchecker caps
+      ansible.builtin.command:
+        argv: "{{ ['ceph', 'auth', 'caps', rook_healthchecker_user] + (rook_healthchecker_caps.items() | list | flatten) }}"
+      when:
+        - rook_healthchecker.rc == 0
+        - (rook_healthchecker.stdout | from_json)[0].caps != rook_healthchecker_caps
+
+    - name: Get the healthchecker key
+      ansible.builtin.command: ceph auth get-key {{ rook_healthchecker_user }}
+      register: rook_healthchecker_key
+      changed_when: false
+      check_mode: false
+      no_log: true
+      # Not created yet in check mode
+      ignore_errors: "{{ ansible_check_mode }}"
+
+    # radosgw-admin isn't in ceph-common, run it from the cluster image
+    - name: Get the RGW admin ops user
+      ansible.builtin.command: cephadm shell -- radosgw-admin user info --uid={{ rook_rgw_admin_uid }}
+      register: rook_rgw_admin
+      changed_when: false
+      failed_when:
+        - rook_rgw_admin.rc != 0
+        - "'no user info saved' not in rook_rgw_admin.stderr"
+      check_mode: false
+      no_log: true
+
+    - name: Create the RGW admin ops user
+      ansible.builtin.command: >-
+        cephadm shell -- radosgw-admin user create --uid={{ rook_rgw_admin_uid }}
+        --display-name="Rook RGW Admin Ops user" --caps="{{ rook_rgw_admin_caps | join(';') }}"
+      register: rook_rgw_admin_created
+      when: rook_rgw_admin.rc != 0
+      no_log: true
+
+    - name: Align the RGW admin ops caps
+      vars:
+        rook_rgw_admin_current_caps: "{{ (rook_rgw_admin.stdout | from_json).caps }}"
+      ansible.builtin.command: >-
+        cephadm shell -- radosgw-admin caps add --uid={{ rook_rgw_admin_uid }}
+        --caps="{{ rook_rgw_admin_caps | join(';') }}"
+      when:
+        - rook_rgw_admin.rc == 0
+        - rook_rgw_admin_current_caps | map(attribute='type') | zip(rook_rgw_admin_current_caps | map(attribute='perm'))
+          | map('join', '=') | sort != rook_rgw_admin_caps | sort
+      no_log: true
+
+    - name: Read the Rook credentials in Vault
+      ansible.builtin.uri:
+        url: "{{ rook_vault_url }}"
+        headers:
+          X-Vault-Token: "{{ mout_vault_token }}"
+        status_code: [200, 404]
+        validate_certs: false
+      register: rook_vault
+      delegate_to: localhost
+      check_mode: false
+      no_log: true
+
+    # Only on change, a POST always adds a KV version. The vault-secrets-operator
+    # syncs the Secrets and Rook rereads them, rotating a key only needs this.
+    - name: Write the Rook credentials to Vault
+      vars:
+        rook_rgw_admin_key: "{{ ((rook_rgw_admin_created.stdout | default(rook_rgw_admin.stdout, true)) | from_json)['keys'][0] }}"
+        rook_vault_data:
+          healthchecker_key: "{{ rook_healthchecker_key.stdout }}"
+          rgw_admin_access_key: "{{ rook_rgw_admin_key.access_key }}"
+          rgw_admin_secret_key: "{{ rook_rgw_admin_key.secret_key }}"
+      ansible.builtin.uri:
+        url: "{{ rook_vault_url }}"
+        method: POST
+        headers:
+          X-Vault-Token: "{{ mout_vault_token }}"
+        body_format: json
+        body:
+          data: "{{ rook_vault_data }}"
+        validate_certs: false
+      when:
+        - not ansible_check_mode
+        - rook_vault.status == 404 or rook_vault.json.data.data != rook_vault_data
+      changed_when: true
+      delegate_to: localhost
+      no_log: true
+
 - import_playbook: iptables.yaml
 
 - hosts: compute-2.blotzheim.infra.mout.ch
