@@ -179,6 +179,14 @@
   roles:
     - cri.ceph_tools
   post_tasks:
+    # The role adds the repository of the new release but never removes the old
+    # one (apt_repository appends .list to its filename: ceph.list)
+    - name: Remove the repositories of other Ceph releases
+      ansible.builtin.lineinfile:
+        path: /etc/apt/sources.list.d/ceph.list.list
+        regexp: '^deb https://download\.ceph\.com/debian-(?!{{ ceph_release }}/)'
+        state: absent
+
     # The role installs with state: present, so a new ceph_release would
     # switch the repository without upgrading what is already installed
     - name: Upgrade the Ceph host packages to ceph_release
