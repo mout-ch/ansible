@@ -178,6 +178,16 @@
   tags: cephadm
   roles:
     - cri.ceph_tools
+  post_tasks:
+    # The role installs with state: present, so a new ceph_release would
+    # switch the repository without upgrading what is already installed
+    - name: Upgrade the Ceph host packages to ceph_release
+      ansible.builtin.apt:
+        name:
+          - cephadm
+          - ceph-common
+        state: latest
+        only_upgrade: true
 
 - import_playbook: iptables.yaml
 

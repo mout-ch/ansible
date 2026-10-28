@@ -1,3 +1,6 @@
 ---
 ceph_tools_install_cephadm: true
 ceph_tools_install_ceph: false
+
+# Image the daemons run, applied by playbooks/ceph-upgrade.yaml
+ceph_image: quay.io/ceph/ceph:v19.2.7

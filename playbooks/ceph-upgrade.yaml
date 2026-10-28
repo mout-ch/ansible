@@ -1,0 +1,94 @@
+---
+# Upgrades the Ceph cluster to ceph_image through the cephadm orchestrator,
+# which restarts the daemons one by one (mgr, mon, crash, osd, rgw...) and
+# keeps the cluster available. Run on its own, from a HEALTH_OK cluster:
+#
+#   poetry run ansible-playbook playbooks/ceph-upgrade.yaml
+#
+# Then run the cephadm tag of main.yaml so the host packages follow
+# ceph_release. The VMs need cpu_mode: host-passthrough first, Squid images
+# require x86-64-v2.
+- hosts: ceph
+  run_once: true
+  gather_facts: false
+  vars:
+    ceph_upgrade_version: "{{ ceph_image.split(':v') | last }}"
+  tasks:
+    - name: Get the cluster status
+      ansible.builtin.command: ceph status --format json
+      register: ceph_upgrade_status
+      changed_when: false
+      check_mode: false
+
+    - name: Check the cluster is healthy
+      ansible.builtin.assert:
+        that: (ceph_upgrade_status.stdout | from_json).health.status == 'HEALTH_OK'
+        fail_msg: "Cluster is {{ (ceph_upgrade_status.stdout | from_json).health.status }}, see `ceph health detail` (unset noout if still set)"
+
+    - name: Get the running versions
+      ansible.builtin.command: ceph versions --format json
+      register: ceph_upgrade_versions
+      changed_when: false
+      check_mode: false
+
+    - name: Get the upgrade status
+      ansible.builtin.command: ceph orch upgrade status
+      register: ceph_upgrade_orch
+      changed_when: false
+      check_mode: false
+
+    - name: Start the upgrade to {{ ceph_image }}
+      ansible.builtin.command: ceph orch upgrade start --image {{ ceph_image }}
+      when:
+        - not (ceph_upgrade_orch.stdout | from_json).in_progress
+        - (ceph_upgrade_versions.stdout | from_json).overall.keys()
+          | reject('search', 'ceph version ' ~ ceph_upgrade_version ~ ' ') | list | length > 0
+
+    # The orchestrator restarts the mgr first: the command can fail while the
+    # standby takes over, so retry on errors instead of failing
+    - name: Wait for the upgrade to finish
+      ansible.builtin.command: ceph orch upgrade status
+      register: ceph_upgrade_progress
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      until: >-
+        ceph_upgrade_progress.rc == 0
+        and ((ceph_upgrade_progress.stdout | from_json).is_paused
+             or not (ceph_upgrade_progress.stdout | from_json).in_progress)
+      retries: 180
+      delay: 20
+
+    - name: Check the upgrade was not paused on an error
+      ansible.builtin.assert:
+        that:
+          - ceph_upgrade_progress.rc == 0
+          - not (ceph_upgrade_progress.stdout | from_json).is_paused
+        fail_msg: "Upgrade stopped: {{ ceph_upgrade_progress.stdout | default('') }}{{ ceph_upgrade_progress.stderr | default('') }}"
+
+    - name: Get the versions after the upgrade
+      ansible.builtin.command: ceph versions --format json
+      register: ceph_upgrade_after
+      changed_when: false
+      check_mode: false
+
+    - name: Check every daemon runs {{ ceph_upgrade_version }}
+      ansible.builtin.assert:
+        that: >-
+          (ceph_upgrade_after.stdout | from_json).overall.keys()
+          | reject('search', 'ceph version ' ~ ceph_upgrade_version ~ ' ') | list | length == 0
+        fail_msg: "Still running: {{ (ceph_upgrade_after.stdout | from_json).overall.keys() | list }}"
+      when: not ansible_check_mode
+
+    - name: Get the minimum OSD release
+      ansible.builtin.command: ceph osd dump --format json
+      register: ceph_upgrade_osd_dump
+      changed_when: false
+      check_mode: false
+
+    # Only once every OSD runs the new release: older OSDs can't join after this
+    - name: Require {{ ceph_release }} OSDs
+      ansible.builtin.command: ceph osd require-osd-release {{ ceph_release }}
+      when:
+        - not ansible_check_mode
+        - (ceph_upgrade_osd_dump.stdout | from_json).require_osd_release != ceph_release
