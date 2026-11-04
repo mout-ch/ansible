@@ -4,19 +4,23 @@ Plan to bring the three clusters from v1.28.1 to v1.36, written in October 2026.
 Kubernetes only supports upgrading the control plane one minor at a time, so
 it's 9 hops per cluster, with the components below bumped in between.
 
-## Current state (2026-10-27)
+## Current state (2026-11-04)
 
 | | compute-2 + gate-1.ovh | theater-1 | hv-1.hirsingue |
 |---|---|---|---|
-| k3s | v1.28.1+k3s1 (agent gate-1.ovh v1.28.6+k3s2) | v1.28.1+k3s1 | v1.28.1+k3s1 |
+| Hop done | 4 (agent gate-1.ovh: 1) | 4 | 1 |
+| k3s | v1.32.13+k3s1 (agent gate-1.ovh v1.29.15+k3s1) | v1.32.13+k3s1 | v1.29.15+k3s1 |
 | version var | `group_vars/k3s.yaml` (+ `host_vars/gate-1.ovh`) | `host_vars/theater-1` | `host_vars/hv-1` |
-| Cilium | 1.15.1 | 1.16.1 | 1.16.19 |
-| Traefik (bundled) | 2.9.10 | 2.9.10 | 2.9.10 |
+| Cilium | 1.17.18 | 1.17.18 | 1.16.19 |
+| Traefik (bundled) | 3.6.9 | 3.6.9 | 2.11.20 |
 | ArgoCD | 3.0.6 (chart 8.1.1, `host_vars/compute-2`) | managed from compute-2 | none yet |
 | cert-manager (k8s repo) | 1.18.1 | 1.18.0 | none |
-| ceph-csi (k8s repo) | **3.5.1** (repo says 3.14.0, never synced) | none | none |
-| datastore | sqlite, 454M | sqlite, 30M | sqlite, 15M |
+| ceph-csi (k8s repo) | 3.16.3, Ceph Squid 19.2.7 | none | none |
+| datastore | sqlite, 428M | sqlite, 39M | sqlite, 18M |
 | local-path data | 3.7G in `/var/lib/rancher/k3s/storage` | 11G in `/var/lib/volumes/k3s-local-path` | `/var/lib/volumes/backup/k3s-local-path` |
+
+gate-1.ovh lags 3 minors behind its server, the most kubelet allows: it has to
+reach at least v1.30 before compute-2 goes to hop 5.
 
 All nodes run cgroup v2 (required from 1.35). No deprecated Kubernetes API is
 requested on any cluster (`apiserver_requested_deprecated_apis` only shows
@@ -90,6 +94,16 @@ Re-check these when you get to a hop, newer patch releases may exist.
 Component bumps (Cilium, ArgoCD) are separate runs of the same play, after
 changing `cilium_version` / `argocd_chart_version` in `host_vars`. Read the
 upstream upgrade notes of each minor first, values sometimes get renamed.
+Render the chart with the host values before running the play:
+
+```bash
+helm template cilium cilium --repo https://helm.cilium.io --version <version> -n cilium -f <values.yaml>
+```
+
+Then check the `helm-install-<chart>` job is Complete and the images changed:
+a failing job leaves the previous release running without any other sign.
+theater-1 stayed on Cilium 1.16.1 for a week that way, with `containerRuntime`
+in its values.
 
 ## Traefik: `traefik.containo.us` to `traefik.io`
 
@@ -112,14 +126,14 @@ Check nothing is left before hop 4:
 for r in $(k3s kubectl get crd -o name | grep traefik.containo.us | cut -d/ -f2); do k3s kubectl get $r -A --no-headers; done
 ```
 
+Done on compute-2 and theater-1, left on hv-1. Traefik 3 also no longer
+creates the `traefik-dashboard` IngressRoute.
+
 ## ceph-csi
 
-compute-2 runs ceph-csi 3.5.1 (2022, images from the frozen `k8s.gcr.io`) with
-7 RBD volumes on it. The `ceph-csi` app in the k8s repo already says 3.14.0
-but was never synced (no auto-sync). It has to be upgraded along the way
-(3.14 by 1.30, 3.16 by 1.33, 3.17.1+ by 1.35), in the k8s repo. Upstream only
-documents upgrades from the previous release, so 3.5 → 3.14 needs its own plan.
-Supported Ceph versions of recent ceph-csi also matter for Ceph Reef → Squid.
+ceph-csi is managed by the k8s repo. It runs 3.16.3 on compute-2, which covers
+up to 1.34: it needs 3.17.1+ by 1.35. Ceph itself (cephadm, Squid 19.2.7 since
+2026-10-28) is upgraded with [playbooks/ceph-upgrade.yaml](../../playbooks/ceph-upgrade.yaml).
 
 ## Rollback
 
