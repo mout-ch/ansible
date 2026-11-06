@@ -135,7 +135,7 @@ firewall_rules:
   "LAN_OUT":
     default_action: drop
     rules:
-      # Wireguard peers (gate-1.ovh, theater-1, dieret)
+      # Wireguard peers (gate-1.ovh, theater-1, dieret, hv-1.hirsingue)
       - name: "accept_new_vpn"
         action: accept
         state: ["new"]
@@ -395,6 +395,10 @@ interfaces:
         allowed_ips: 192.168.10.4/32
         persistent_keepalive: 25
         public_key: "7qsKS7mRqatx0Cdg5MnlUtSGhDQPl4QghMtSMyTV2mI="
+      hv-1.hirsingue:
+        allowed_ips: 192.168.10.5/32
+        persistent_keepalive: 25
+        public_key: "{{ (lookup('ansible.builtin.url', mout_vault_addr ~ '/v1/mout.ch/data/wireguard/hv-1.hirsingue.infra.mout.ch', headers={'X-Vault-Token': mout_vault_token}, split_lines=false, validate_certs=false) | from_json).data.data['public_key'] }}"
     port: 51820
     private_key: "{{ (lookup('ansible.builtin.url', mout_vault_addr ~ '/v1/mout.ch/data/wireguard/gate-1.blotzheim.infra.mout.ch', headers={'X-Vault-Token': mout_vault_token}, split_lines=false, validate_certs=false) | from_json).data.data['private_key'] }}"
     units:

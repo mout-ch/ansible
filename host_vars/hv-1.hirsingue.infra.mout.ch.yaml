@@ -28,6 +28,14 @@ cilium_values:
       clusterPoolIPv4PodCIDRList:
         - 10.42.0.0/16
 
+# Wireguard client of gate-1.blotzheim (peer hv-1.hirsingue of wg01)
+setup_type: "client"
+client_wireguard_ip: 192.168.10.5/24
+# The private cloud network.  Can also be a comma-separated list.
+client_accessible_ips: "192.168.10.0/24,192.168.14.0/24"
+server_public_ip: gate-1.blotzheim.infra.mout.ch
+server_public_key: "{{ (lookup('ansible.builtin.url', mout_vault_addr ~ '/v1/mout.ch/data/wireguard/gate-1.blotzheim.infra.mout.ch', headers={'X-Vault-Token': mout_vault_token}, split_lines=false, validate_certs=false) | from_json).data.data['public_key'] }}"
+
 # Network
 netplan_enabled: true
 netplan_packages: netplan.io

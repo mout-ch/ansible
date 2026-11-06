@@ -129,7 +129,7 @@
         state: present
         reload: yes
 
-- hosts: vpn, theater-1.magstatt.infra.mout.ch
+- hosts: vpn, theater-1.magstatt.infra.mout.ch, hv-1.hirsingue.infra.mout.ch
   tags: wireguard
   tasks:
     - name: get wireguard public key
@@ -152,7 +152,7 @@
       delegate_to: localhost
       ignore_errors: true
 
-- hosts: vpn, theater-1.magstatt.infra.mout.ch
+- hosts: vpn, theater-1.magstatt.infra.mout.ch, hv-1.hirsingue.infra.mout.ch
   roles:
     - consensus.wireguard_cloud_gateway
   tags: vpn

@@ -41,8 +41,7 @@ flowchart LR
   end
 
   subgraph hirsingue["Hirsingue (Freebox 82.96.151.15)"]
-    hvh["hv-1.hirsingue<br/>192.168.1.67<br/>k3s standalone, offsite backup"]
-    gateh["gate-1.hirsingue<br/>192.168.21.1"]
+    hvh["hv-1.hirsingue<br/>192.168.1.67<br/>wg 192.168.10.5<br/>k3s standalone, offsite backup"]
   end
 
   internet --- gate
@@ -50,14 +49,14 @@ flowchart LR
   internet --- hirsingue
   gate <-. "WireGuard :51820" .-> ovh1
   gate <-. "WireGuard :51820" .-> theater
-  gateh <-. "WireGuard" .-> ovh1
+  gate <-. "WireGuard :51820" .-> hvh
 ```
 
 ## Subnets
 
 | CIDR | Name | Where | Hosts |
 |---|---|---|---|
-| `192.168.10.0/24` | WireGuard interco | `wg01` on gate-1.blotzheim, port 51820 | gate-1.blotzheim `.1`, gate-1.ovh `.2`, theater-1.magstatt `.3` |
+| `192.168.10.0/24` | WireGuard interco | `wg01` on gate-1.blotzheim, port 51820 | gate-1.blotzheim `.1`, gate-1.ovh `.2`, theater-1.magstatt `.3`, dieret `.4` (not managed here), hv-1.hirsingue `.5` |
 | `192.168.2.0/24` | public | gate-1.blotzheim `eth1` (passthrough NIC) | gate `.1`, DHCP `.100`-`.254`, NAT to WAN |
 | `192.168.13.0/24` | dmz | KVM bridge `virbr1` on hv-1.blotzheim | gate `.1`, compute-2 `.11` |
 | `192.168.14.0/24` | lan | KVM bridge `virbr2` | gate `.1`, ceph-1/2/3 `.10`-`.12`, compute-2 `.21` |
@@ -65,7 +64,6 @@ flowchart LR
 | `192.168.11.0/24` | hypervisor | hv-1.blotzheim `eno1` | hv-1 `.30`, gateway `.1` |
 | `192.168.1.0/24` | Magstatt home LAN | box `.1` | theater-1 `.130`, NFS clients `.132`, `.140` |
 | `192.168.1.0/24` | Hirsingue home LAN | Freebox `.1` | hv-1.hirsingue `.67` |
-| `192.168.21.0/24` | Hirsingue behind gate-1.hirsingue | gate-1.hirsingue `eth0` | gate `.1` |
 
 ## Public entry points
 
@@ -81,13 +79,7 @@ flowchart LR
 |---|---|---|
 | blotzheim | compute-2 (server), gate-1.ovh (agent) | Cilium, ArgoCD, RBD storage on Ceph, API `192.168.14.21:6443` |
 | theater-1 | theater-1.magstatt | standalone, reaches `192.168.14.0/24` through WireGuard |
-| hv-1.hirsingue | hv-1.hirsingue | standalone, offsite backup target (RAID1 on `/var/lib/volumes/backup`) |
-
-## Known inconsistencies
-
-- gate-1.hirsingue and theater-1.magstatt both use WireGuard IP `192.168.10.3`.
-- gate-1.hirsingue uses gate-1.ovh as WireGuard server, but gate-1.ovh is itself a client of gate-1.blotzheim. gate-1.hirsingue was unreachable in October 2026.
-- hv-1.hirsingue sits on the Freebox LAN, not behind gate-1.hirsingue.
+| hv-1.hirsingue | hv-1.hirsingue | standalone, offsite backup target (RAID1 on `/var/lib/volumes/backup`), reaches `192.168.14.0/24` through WireGuard |
 
 
 ## Cilium

@@ -3,7 +3,6 @@ gate
 
 [gate]
 gate-1.ovh.infra.mout.ch
-gate-1.hirsingue.infra.mout.ch
 
 [gate:children]
 vyos
